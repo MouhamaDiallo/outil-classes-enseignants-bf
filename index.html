@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classes et enseignants</title>
+  <meta name="description" content="Outil d'aide à la décision : répartition des classes et des enseignants du primaire public au Burkina Faso, 2017-2031.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete">
+    <div>
+      <h1>Classes et enseignants du primaire public</h1>
+      <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 ? Burkina Faso, 45 provinces.</p>
+    </div>
+    <button id="theme" class="bouton-discret" type="button" aria-label="Changer de thème">Thème</button>
+  </header>
+
+  <nav class="onglets" role="tablist" aria-label="Écrans">
+    <button role="tab" aria-selected="true" data-ecran="situation">La situation</button>
+    <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
+    <button role="tab" aria-selected="false" data-ecran="simulateur">Le simulateur</button>
+    <button role="tab" aria-selected="false" data-ecran="reglages">Les réglages</button>
+    <button role="tab" aria-selected="false" data-ecran="fiche">Fiche province</button>
+    <button role="tab" aria-selected="false" data-ecran="methode">Méthode et sources</button>
+  </nav>
+
+  <main>
+    <!-- 1. La situation -->
+    <section id="ecran-situation" class="ecran actif" role="tabpanel">
+      <div class="tuiles" id="tuiles"></div>
+      <div class="grille-2">
+        <figure class="carte-bloc">
+          <figcaption>
+            <span class="titre-fig">Priorité de chaque province</span>
+            <label class="curseur">Année <input type="range" id="annee-carte" min="0" max="7" step="1" value="7"><output id="annee-carte-txt"></output></label>
+          </figcaption>
+          <div id="carte" class="carte" role="img" aria-label="Carte des 45 provinces colorées par classe de priorité"></div>
+          <div class="legende" id="legende-carte"></div>
+        </figure>
+        <figure class="graphe-bloc">
+          <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
+          <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
+          <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont directeurs déchargés ou suppléants.</p>
+        </figure>
+      </div>
+      <div id="liste-priorites" class="bloc"></div>
+    </section>
+
+    <!-- 2. La frise -->
+    <section id="ecran-frise" class="ecran" role="tabpanel" hidden>
+      <div class="filtres">
+        <label>Afficher <select id="frise-variable"></select></label>
+        <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail.</span>
+      </div>
+      <div class="legende" id="legende-frise"></div>
+      <div class="frise-defile"><table id="frise" class="frise"></table></div>
+    </section>
+
+    <!-- 3. Le simulateur -->
+    <section id="ecran-simulateur" class="ecran" role="tabpanel" hidden>
+      <div class="simu">
+        <form id="commandes" class="commandes" onsubmit="return false">
+          <h2>Les réglages du plan</h2>
+          <label>Argent pour les salles, par an <output data-pour="argent"></output>
+            <input type="range" id="argent" min="0" max="30" step="0.5" value="5"></label>
+          <label>Postes de nouveaux enseignants, par an <output data-pour="postes"></output>
+            <input type="range" id="postes" min="0" max="5000" step="100" value="2000"></label>
+          <label>Respect des affectations prévues <output data-pour="respect"></output>
+            <input type="range" id="respect" min="20" max="100" step="5" value="100"></label>
+          <label>Suppléants gardés en réserve <output data-pour="reserve"></output>
+            <input type="range" id="reserve" min="0" max="60" step="5" value="20"></label>
+          <fieldset>
+            <legend>Plafond d'élèves par classe</legend>
+            <label>2025 à 2027 <select id="plafond-1"></select></label>
+            <label>2027 à 2029 <select id="plafond-2"></select></label>
+            <label>2029 à 2031 <select id="plafond-3"></select></label>
+          </fieldset>
+          <fieldset>
+            <legend>Double flux (deux groupes par salle, deux enseignants)</legend>
+            <label class="case"><input type="checkbox" id="df" checked> Autorisé, en dernier recours</label>
+            <label>Jusqu'à <select id="df-fin"></select></label>
+            <label class="case"><input type="checkbox" id="df-fermetures"> Aussi dans les provinces avec fermetures</label>
+          </fieldset>
+          <fieldset>
+            <legend>Coûts</legend>
+            <label>Abri temporaire (ETA) <output data-pour="cout-eta"></output>
+              <input type="range" id="cout-eta" min="1" max="6" step="0.1" value="3"></label>
+            <label>Salle en dur <output data-pour="cout-dur"></output>
+              <input type="range" id="cout-dur" min="10" max="20" step="0.1" value="15.7"></label>
+          </fieldset>
+          <p class="etat" id="etat-calcul" aria-live="polite"></p>
+          <button type="button" id="bouton-courbe" class="bouton">Tracer la courbe de rendement</button>
+        </form>
+        <div class="resultats">
+          <div class="tuiles" id="tuiles-plan"></div>
+          <figure class="graphe-bloc">
+            <figcaption><span class="titre-fig">Élèves en surnombre (au-delà du plafond), sans action et avec le plan</span></figcaption>
+            <div class="graphe"><canvas id="g-surnombre"></canvas></div>
+          </figure>
+          <figure class="graphe-bloc" id="bloc-courbe" hidden>
+            <figcaption><span class="titre-fig">Courbe de rendement : élèves en surnombre sur 6 ans selon l'argent mis dans les salles</span></figcaption>
+            <div class="graphe"><canvas id="g-courbe"></canvas></div>
+            <p class="note" id="note-courbe"></p>
+          </figure>
+          <div class="bloc">
+            <h3>Les moyens mobilisés, année par année</h3>
+            <div class="tableau-defile"><table id="t-moyens" class="tableau"></table></div>
+          </div>
+          <div class="bloc">
+            <div class="filtres">
+              <h3>Le plan par province</h3>
+              <label>Année <select id="plan-annee"></select></label>
+              <button type="button" id="export-plan" class="bouton-discret">Télécharger le plan (CSV)</button>
+            </div>
+            <div class="tableau-defile"><table id="t-plan" class="tableau"></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Les réglages -->
+    <section id="ecran-reglages" class="ecran" role="tabpanel" hidden>
+      <p class="intro">Les variables « oui / non » décident de la priorité de chaque province, chaque année. Vous pouvez les retirer, changer leur seuil pour une année, corriger une province à la main ou créer une variable. Chaque correction garde sa justification et son auteur.</p>
+      <div class="bloc">
+        <h3>1. Les variables et leurs seuils</h3>
+        <div class="tableau-defile"><table id="t-variables" class="tableau"></table></div>
+      </div>
+      <div class="bloc">
+        <h3>2. Retirer une variable ou changer son seuil pour une année</h3>
+        <form id="f-annee" class="formulaire" onsubmit="return false">
+          <label>Année <select id="pa-annee"></select></label>
+          <label>Variable <select id="pa-variable"></select></label>
+          <label>Action <select id="pa-action"><option value="retirer">la retirer cette année</option><option value="seuil">changer son seuil</option></select></label>
+          <label>Nouveau seuil <input type="number" id="pa-seuil" step="any"></label>
+          <button type="button" id="pa-ajouter" class="bouton">Appliquer</button>
+        </form>
+        <ul id="l-par-annee" class="liste"></ul>
+      </div>
+      <div class="bloc">
+        <h3>3. Corriger une province à la main</h3>
+        <form id="f-correction" class="formulaire" onsubmit="return false">
+          <label>Année <select id="c-annee"></select></label>
+          <label>Province <select id="c-province"></select></label>
+          <label>Variable <select id="c-variable"></select></label>
+          <label>Valeur <select id="c-valeur"><option value="1">1 (oui)</option><option value="0">0 (non)</option></select></label>
+          <label class="large">Justification <input type="text" id="c-justification" placeholder="Ex. : afflux de déplacés en mars, rapport du préfet" required></label>
+          <label>Auteur <input type="text" id="c-auteur" placeholder="Service ou fonction" required></label>
+          <button type="button" id="c-ajouter" class="bouton">Ajouter la correction</button>
+        </form>
+        <ul id="l-corrections" class="liste"></ul>
+      </div>
+      <div class="bloc">
+        <h3>4. Créer une variable</h3>
+        <form id="f-variable" class="formulaire" onsubmit="return false">
+          <label>Code <input type="text" id="v-code" placeholder="B9" maxlength="6"></label>
+          <label class="large">Nom <input type="text" id="v-nom" placeholder="Salles très surchargées"></label>
+          <label>Indicateur <select id="v-indicateur"></select></label>
+          <label>Sens <select id="v-op"><option>&gt;</option><option>&gt;=</option><option>&lt;</option><option>&lt;=</option></select></label>
+          <label>Seuil <input type="number" id="v-seuil" step="any"></label>
+          <label>Rôle <select id="v-role"><option value="crise">signal de crise</option><option value="surcharge">surcharge</option><option value="salles">manque de salles</option><option value="croissance">croissance durable</option><option value="donneuse">donneuse</option><option value="comparaison">comparaison seulement</option></select></label>
+          <button type="button" id="v-ajouter" class="bouton">Créer la variable</button>
+        </form>
+      </div>
+      <div class="bloc">
+        <h3>Scénarios</h3>
+        <div class="formulaire">
+          <button type="button" id="s-exporter" class="bouton">Enregistrer ce scénario (fichier)</button>
+          <label class="bouton-discret fichier">Ouvrir un scénario <input type="file" id="s-importer" accept=".json,application/json"></label>
+          <button type="button" id="s-reinitialiser" class="bouton-discret">Revenir au scénario de référence</button>
+        </div>
+        <p class="note">Le fichier de scénario est le même que celui des calculs en Python (analyse/parametres) : ce que vous réglez ici est exactement ce que le modèle calcule.</p>
+      </div>
+    </section>
+
+    <!-- 5. Fiche province -->
+    <section id="ecran-fiche" class="ecran" role="tabpanel" hidden>
+      <div class="filtres non-imprime">
+        <label>Province <select id="fiche-province"></select></label>
+        <button type="button" id="imprimer" class="bouton">Imprimer la fiche</button>
+      </div>
+      <article id="fiche" class="fiche"></article>
+    </section>
+
+    <!-- 6. Méthode et sources -->
+    <section id="ecran-methode" class="ecran" role="tabpanel" hidden>
+      <article class="texte" id="methode"></article>
+    </section>
+  </main>
+
+  <div id="infobulle" class="infobulle" role="tooltip" hidden></div>
+  <footer class="pied">Data Challenge Burkina 2026, édition Éducation · Défi 3 · Données publiques DGESS, INSD, CONASUR, OCHA</footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

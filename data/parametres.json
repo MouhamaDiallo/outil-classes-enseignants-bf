@@ -1,0 +1,193 @@
+{
+  "nom": "Scénario de référence",
+  "description": "Réglages décidés par l'équipe le 13/11/2026. Chaque réglage peut être changé pour une année donnée (bloc « par_annee ») ou pour une province donnée (bloc « corrections »).",
+  "variables": {
+    "B1": {
+      "nom": "Surcharge",
+      "role": "surcharge",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "eleves_par_maitre",
+          "op": ">",
+          "seuil": "plafond"
+        }
+      ],
+      "explication": "Élèves par maître au-dessus du plafond de l'année."
+    },
+    "B2": {
+      "nom": "Fuite des maîtres",
+      "role": "crise",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "var_maitres_pct",
+          "op": "<=",
+          "seuil": -10
+        },
+        {
+          "indicateur": "ecart_var_eleves_maitres",
+          "op": ">=",
+          "seuil": 10
+        }
+      ],
+      "explication": "Maîtres en baisse d'au moins 10 % sur un an, et au moins 10 points de plus que les élèves."
+    },
+    "B3": {
+      "nom": "Accueil de déplacés",
+      "role": "crise",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "pdi_pct_pop",
+          "op": ">=",
+          "seuil": 10
+        }
+      ],
+      "explication": "Déplacés internes accueillis : au moins 10 % de la population de 2019."
+    },
+    "B4": {
+      "nom": "Fermetures",
+      "role": "crise",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "ecoles_pct_2018",
+          "op": "<=",
+          "seuil": 80
+        }
+      ],
+      "explication": "Écoles publiques : 80 % ou moins de leur nombre de 2018-19."
+    },
+    "B6": {
+      "nom": "Manque de salles",
+      "role": "salles",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "eleves_par_salle",
+          "op": ">",
+          "seuil": "plafond"
+        }
+      ],
+      "explication": "Élèves par salle au-dessus du plafond de l'année."
+    },
+    "B7": {
+      "nom": "Croissance durable",
+      "role": "croissance",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "croissance_6_11_relative",
+          "op": ">",
+          "seuil": 0
+        }
+      ],
+      "explication": "Enfants de 6-11 ans en hausse de 2025 à 2030 plus vite que la moyenne nationale."
+    },
+    "B8": {
+      "nom": "Donneuse possible",
+      "role": "donneuse",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "eleves_par_maitre",
+          "op": "<",
+          "seuil": 45
+        },
+        {
+          "indicateur": "B2",
+          "op": "==",
+          "seuil": 0
+        }
+      ],
+      "explication": "Moins de 45 élèves par maître et pas de fuite des maîtres."
+    },
+    "B5": {
+      "nom": "Zone officielle",
+      "role": "comparaison",
+      "actif": true,
+      "conditions": [
+        {
+          "indicateur": "zone_officielle",
+          "op": "==",
+          "seuil": 1
+        }
+      ],
+      "explication": "Province de la liste des 19 « zones à fort défi sécuritaire ». Sert seulement à comparer, jamais aux priorités."
+    }
+  },
+  "regles": {
+    "seuil_vigilance": 50,
+    "explication": "urgence = surcharge et au moins une variable « crise » ; surcharge = surcharge seule ; vigilance = pas de surcharge, plus de seuil_vigilance élèves par maître et une variable « crise » ; donneuse = variable « donneuse » ; sinon stable. Salles : ETA si manque de salles, une variable « crise » d'accueil (B3) et pas de croissance durable ; en dur si manque de salles et croissance durable."
+  },
+  "plafond_par_annee": {
+    "2017-2018": 60,
+    "2018-2019": 60,
+    "2019-2020": 60,
+    "2020-2021": 60,
+    "2021-2022": 60,
+    "2022-2023": 60,
+    "2023-2024": 60,
+    "2024-2025": 60,
+    "2025-2026": 60,
+    "2026-2027": 60,
+    "2027-2028": 55,
+    "2028-2029": 55,
+    "2029-2030": 50,
+    "2030-2031": 50
+  },
+  "leviers_par_annee": {
+    "defaut": {
+      "suppleants": true,
+      "eta": true,
+      "salle_dur": true,
+      "recrutement": true,
+      "double_flux": true,
+      "double_flux_si_fermetures": false
+    },
+    "2027-2028": {
+      "double_flux": true
+    },
+    "2029-2030": {
+      "double_flux": false
+    }
+  },
+  "reserve_suppleants_pct": 20,
+  "par_annee": {
+    "exemple_2028-2029": {
+      "B2": {
+        "actif": false
+      },
+      "B3": {
+        "seuil": 5
+      }
+    }
+  },
+  "corrections": [
+    {
+      "annee": "exemple",
+      "province": "EXEMPLE",
+      "variable": "B3",
+      "valeur": 1,
+      "justification": "Afflux de déplacés signalé après la collecte (source à citer).",
+      "auteur": "nom ou service"
+    }
+  ],
+  "couts": {
+    "eta_fcfa": 3000000,
+    "salle_dur_fcfa": 15700000,
+    "duree_vie_eta_ans": 3,
+    "sources": "Salle en dur : 47 039 700 FCFA pour 3 salles (ministre de l'Éducation, 20/11/2024, Libreinfo). ETA : environ 3 M FCFA (plus de 3 milliards pour plus de 1 000 ETA, ST-ESU 31/05/2023 cité par Studio Yafa ; estimation faible, à tester de 1 à 5 M). Voir REVUE_PAYS.md, section D."
+  },
+  "budgets_par_annee": {
+    "defaut": {
+      "argent_salles_fcfa": 5000000000,
+      "postes_nouveaux_enseignants": 2000
+    },
+    "explication": "Deux enveloppes séparées, comme dans la réalité : l'argent pour les salles (ETA et en dur) et le nombre de postes de nouveaux enseignants. Repère : le public a gagné environ 2 200 enseignants tenant une classe en 2024-25."
+  },
+  "taux_respect_affectation_pct": 100,
+  "valeur_pedagogique_double_flux_pct": 50,
+  "explication_optimisation": "Le modèle cherche, chaque année et dans chaque province, combien de nouvelles classes ouvrir et avec quoi (suppléant ou recrue pour l'enseignant ; ETA, salle en dur ou double flux pour la salle) afin de réduire au maximum le nombre d'élèves en surnombre (au-delà du plafond de l'année), dans la limite des deux budgets. Un groupe en double flux ne compte qu'à valeur_pedagogique_double_flux_pct % (heures de cours en moins). Les recrues ne suivent la règle qu'à taux_respect_affectation_pct %."
+}
