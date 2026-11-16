@@ -6,19 +6,33 @@
   <title>Classes et enseignants</title>
   <meta name="description" content="Outil d'aide à la décision : répartition des classes et des enseignants du primaire public au Burkina Faso, 2017-2031.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
   <header class="entete">
     <div>
       <h1>Classes et enseignants du primaire public</h1>
-      <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 ? Burkina Faso, 45 provinces.</p>
+      <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 ? Burkina Faso, 45 provinces (découpage des annuaires DGESS). Données des années scolaires 2017-2018 à 2024-2025.</p>
     </div>
-    <button id="theme" class="bouton-discret" type="button" aria-label="Changer de thème">Thème</button>
+    <div class="reglages-affichage">
+      <div><span class="titre-groupe">Fond</span><span class="affichage" role="group" aria-label="Fond">
+        <button type="button" data-fond="blanc" aria-pressed="false">Blanc</button>
+        <button type="button" data-fond="noir" aria-pressed="false">Noir</button>
+      </span></div>
+      <div><span class="titre-groupe">Couleurs</span><span class="affichage" role="group" aria-label="Couleurs">
+        <button type="button" data-couleurs="standard" aria-pressed="false">Standard</button>
+        <button type="button" data-couleurs="deuteranopie" aria-pressed="false" title="Daltonisme rouge-vert, le plus fréquent (environ 5 hommes sur 100)">Deutéranopie</button>
+        <button type="button" data-couleurs="protanopie" aria-pressed="false" title="Daltonisme rouge-vert : le rouge paraît sombre">Protanopie</button>
+        <button type="button" data-couleurs="tritanopie" aria-pressed="false" title="Daltonisme bleu-jaune, rare">Tritanopie</button>
+      </span></div>
+    </div>
   </header>
 
   <nav class="onglets" role="tablist" aria-label="Écrans">
-    <button role="tab" aria-selected="true" data-ecran="situation">La situation</button>
+    <button role="tab" aria-selected="true" data-ecran="situation">La situation actuelle</button>
     <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
     <button role="tab" aria-selected="false" data-ecran="simulateur">Le simulateur</button>
     <button role="tab" aria-selected="false" data-ecran="reglages">Les réglages</button>
@@ -27,13 +41,23 @@
   </nav>
 
   <main>
-    <!-- 1. La situation -->
+    <p id="chargement" class="chargement" role="status">Chargement des données et des bibliothèques… (quelques secondes si la connexion est lente)</p>
+    <!-- 1. La situation actuelle -->
     <section id="ecran-situation" class="ecran actif" role="tabpanel">
+      <div class="but-ecran"><span class="numero">1</span><div><p><b>Le constat, et ce qu'il faut faire à la prochaine rentrée.</b></p><p class="quoi">Lisez d'abord « Ce qu'il faut faire ». Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
       <div class="tuiles" id="tuiles"></div>
+      <section class="bloc a-faire" id="a-faire">
+        <h2>Ce qu'il faut faire</h2>
+        <div id="a-faire-resume" class="a-faire-resume">Calcul du plan…</div>
+        <h3>Ce qu'on observe aujourd'hui (2024-2025, avant le plan)</h3>
+        <ul id="alertes" class="liste-reco"></ul>
+        <p><a href="#simulateur" class="lien-plan">Voir le plan détaillé, province par province et année par année →</a></p>
+        <div class="etape-suivante"><a href="#simulateur">Étape suivante : Ajuster le plan dans le simulateur →</a></div>
+    </section>
       <div class="grille-2">
         <figure class="carte-bloc">
           <figcaption>
-            <span class="titre-fig">Priorité de chaque province</span>
+            <span class="titre-fig">Priorité de chaque province <span class="note">(cliquez pour ouvrir sa fiche)</span></span>
             <label class="curseur">Année <input type="range" id="annee-carte" min="0" max="7" step="1" value="7"><output id="annee-carte-txt"></output></label>
           </figcaption>
           <div id="carte" class="carte" role="img" aria-label="Carte des 45 provinces colorées par classe de priorité"></div>
@@ -42,35 +66,43 @@
         <figure class="graphe-bloc">
           <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
           <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
-          <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont directeurs déchargés ou suppléants.</p>
+          <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le bloc « Classes, enseignants et salles »).</p>
         </figure>
       </div>
+      <div id="bilan-classes" class="bloc"></div>
       <div id="liste-priorites" class="bloc"></div>
     </section>
 
     <!-- 2. La frise -->
     <section id="ecran-frise" class="ecran" role="tabpanel" hidden>
+      <div class="but-ecran"><span class="numero">2</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule.</p></div></div>
       <div class="filtres">
         <label>Afficher <select id="frise-variable"></select></label>
         <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail.</span>
       </div>
       <div class="legende" id="legende-frise"></div>
       <div class="frise-defile"><table id="frise" class="frise"></table></div>
+      <div class="etape-suivante"><a href="#simulateur">Étape suivante : Voir le plan qui répond à ces besoins →</a></div>
     </section>
 
     <!-- 3. Le simulateur -->
     <section id="ecran-simulateur" class="ecran" role="tabpanel" hidden>
+      <div class="but-ecran"><span class="numero">3</span><div><p><b>Le plan de 2025-2026 à 2030-2031, recalculé selon vos choix.</b></p><p class="quoi">Changez le budget, les plafonds ou les règles à gauche : le plan et les recommandations se mettent à jour en moins d'une seconde.</p></div></div>
       <div class="simu">
         <form id="commandes" class="commandes" onsubmit="return false">
           <h2>Les réglages du plan</h2>
           <label>Argent pour les salles, par an <output data-pour="argent"></output>
             <input type="range" id="argent" min="0" max="30" step="0.5" value="5"></label>
+          <p class="note">Repère : de 3 Md (État seul) à 12 Md par an (avec les partenaires, dont le projet REPAIR de la Banque mondiale).</p>
           <label>Postes de nouveaux enseignants, par an <output data-pour="postes"></output>
             <input type="range" id="postes" min="0" max="5000" step="100" value="2000"></label>
-          <label>Respect des affectations prévues <output data-pour="respect"></output>
+          <p class="note">Repère : 3 090 élèves-maîtres recrutés par concours ENEP en 2024.</p>
+          <label>Part des recrutements prévus réellement effectués <output data-pour="respect"></output>
             <input type="range" id="respect" min="20" max="100" step="5" value="100"></label>
-          <label>Suppléants gardés en réserve <output data-pour="reserve"></output>
+          <label>Enseignants sans classe gardés en réserve <output data-pour="reserve"></output>
             <input type="range" id="reserve" min="0" max="60" step="5" value="20"></label>
+          <label>Enseignants envoyés dans une autre province de la région, au plus, par an <output data-pour="redeploiement"></output>
+            <input type="range" id="redeploiement" min="0" max="100" step="5" value="100"></label>
           <fieldset>
             <legend>Plafond d'élèves par classe</legend>
             <label>2025 à 2027 <select id="plafond-1"></select></label>
@@ -82,6 +114,17 @@
             <label class="case"><input type="checkbox" id="df" checked> Autorisé, en dernier recours</label>
             <label>Jusqu'à <select id="df-fin"></select></label>
             <label class="case"><input type="checkbox" id="df-fermetures"> Aussi dans les provinces avec fermetures</label>
+            <label class="case"><input type="checkbox" id="definitives" checked> Une classe ouverte reste ouverte jusqu'en 2031</label>
+          </fieldset>
+          <fieldset>
+            <legend>Sécurité</legend>
+            <label>Scénario <select id="securite">
+              <option value="actuelle">La situation actuelle se prolonge</option>
+              <option value="retour">Retour progressif à la normale</option></select></label>
+            <label>À partir de <select id="securite-debut"></select></label>
+            <label>Écoles fermées qui rouvrent, par an <output data-pour="securite-rythme"></output>
+              <input type="range" id="securite-rythme" min="10" max="100" step="5" value="25"></label>
+            <p class="note">Les écoles fermées depuis 2018-2019 rouvrent avec leurs élèves et leurs salles.</p>
           </fieldset>
           <fieldset>
             <legend>Coûts</legend>
@@ -91,16 +134,26 @@
               <input type="range" id="cout-dur" min="10" max="20" step="0.1" value="15.7"></label>
           </fieldset>
           <p class="etat" id="etat-calcul" aria-live="polite"></p>
-          <button type="button" id="bouton-courbe" class="bouton">Tracer la courbe de rendement</button>
+          <button type="button" id="bouton-courbe" class="bouton">Que rapporte chaque milliard de plus ?</button>
         </form>
         <div class="resultats">
           <div class="tuiles" id="tuiles-plan"></div>
+          <div class="bloc recommandations">
+            <div class="filtres">
+              <h3>Ce que le plan recommande</h3>
+              <label>Année <select id="reco-annee"></select></label>
+            </div>
+            <div id="reco-resume"></div>
+            <ul id="reco-liste" class="liste-reco"></ul>
+            <details class="suite" id="reco-suite" hidden><summary></summary><ul id="reco-liste-suite" class="liste-reco"></ul></details>
+          </div>
           <figure class="graphe-bloc">
             <figcaption><span class="titre-fig">Élèves en surnombre (au-delà du plafond), sans action et avec le plan</span></figcaption>
             <div class="graphe"><canvas id="g-surnombre"></canvas></div>
+            <p class="note" id="note-surnombre"></p>
           </figure>
           <figure class="graphe-bloc" id="bloc-courbe" hidden>
-            <figcaption><span class="titre-fig">Courbe de rendement : élèves en surnombre sur 6 ans selon l'argent mis dans les salles</span></figcaption>
+            <figcaption><span class="titre-fig">Que rapporte chaque milliard de plus ? Élèves en surnombre sur 6 ans, selon l'argent mis chaque année dans les salles</span></figcaption>
             <div class="graphe"><canvas id="g-courbe"></canvas></div>
             <p class="note" id="note-courbe"></p>
           </figure>
@@ -118,11 +171,12 @@
           </div>
         </div>
       </div>
+      <div class="etape-suivante"><a href="#fiche">Étape suivante : Imprimer la fiche d'une province →</a></div>
     </section>
 
     <!-- 4. Les réglages -->
     <section id="ecran-reglages" class="ecran" role="tabpanel" hidden>
-      <p class="intro">Les variables « oui / non » décident de la priorité de chaque province, chaque année. Vous pouvez les retirer, changer leur seuil pour une année, corriger une province à la main ou créer une variable. Chaque correction garde sa justification et son auteur.</p>
+      <div class="but-ecran"><span class="numero">4</span><div><p><b>Les règles qui décident de la priorité de chaque province.</b></p><p class="quoi">Pour les experts : retirer une variable une année, changer un seuil, corriger une province avec une justification.</p></div></div>
       <div class="bloc">
         <h3>1. Les variables et leurs seuils</h3>
         <div class="tableau-defile"><table id="t-variables" class="tableau"></table></div>
@@ -172,19 +226,23 @@
         </div>
         <p class="note">Le fichier de scénario est le même que celui des calculs en Python (analyse/parametres) : ce que vous réglez ici est exactement ce que le modèle calcule.</p>
       </div>
+      <div class="etape-suivante"><a href="#simulateur">Étape suivante : Revenir au plan →</a></div>
     </section>
 
     <!-- 5. Fiche province -->
     <section id="ecran-fiche" class="ecran" role="tabpanel" hidden>
+      <div class="but-ecran"><span class="numero">5</span><div><p><b>Une page par province, à imprimer pour la direction provinciale.</b></p><p class="quoi">Choisissez la province ; la fiche reprend ses chiffres et ce que le plan lui recommande, année par année.</p></div></div>
       <div class="filtres non-imprime">
         <label>Province <select id="fiche-province"></select></label>
         <button type="button" id="imprimer" class="bouton">Imprimer la fiche</button>
       </div>
       <article id="fiche" class="fiche"></article>
+      <div class="etape-suivante"><a href="#methode">Étape suivante : Voir la méthode et les sources →</a></div>
     </section>
 
     <!-- 6. Méthode et sources -->
     <section id="ecran-methode" class="ecran" role="tabpanel" hidden>
+      <div class="but-ecran"><span class="numero">6</span><div><p><b>D'où viennent les chiffres, comment le plan est calculé, et ses limites.</b></p></div></div>
       <article class="texte" id="methode"></article>
     </section>
   </main>
@@ -194,6 +252,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=28"></script>
 </body>
 </html>

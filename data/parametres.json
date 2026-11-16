@@ -144,7 +144,8 @@
       "salle_dur": true,
       "recrutement": true,
       "double_flux": true,
-      "double_flux_si_fermetures": false
+      "double_flux_si_fermetures": false,
+      "redeploiement": true
     },
     "2027-2028": {
       "double_flux": true
@@ -154,6 +155,17 @@
     }
   },
   "reserve_suppleants_pct": 20,
+  "redeploiement_region_pct": 100,
+  "explication_redeploiement": "Part maximale, chaque année, des enseignants sans classe disponibles (après les besoins de la province et la réserve) qu'une province peut envoyer dans une autre province de la même ancienne région. Par défaut 100 % : pas de limite arbitraire (règle de non-dégradation décidée le 13/11 et confirmée le 15/11). À baisser si le ministère connaît la capacité réelle de son administration à déplacer des enseignants.",
+  "securite": {
+    "scenario": "actuelle",
+    "debut": "2027-2028",
+    "rythme_pct": 25,
+    "salles_reutilisables_pct": 100,
+    "explication": "« actuelle » : la situation de 2024-25 se prolonge. « retour » : à partir de « debut », rythme_pct % des écoles publiques disparues depuis 2018-19 (par province) rouvrent chaque année, avec leurs élèves (élèves par école de 2018-19) et leurs salles (salles par école de 2018-19, dont salles_reutilisables_pct % encore utilisables). Hypothèses arbitraires, réglables, voir HYPOTHESES.md."
+  },
+  "classes_definitives": true,
+  "explication_classes_definitives": "Une classe ouverte reste ouverte jusqu'en 2030-31 : pas de fermeture en cours de plan (décision de l'équipe, 15/11). Sans cette règle, le plan ouvrait des classes en double flux qui fermaient en 2029-30 (1 420 classes).",
   "par_annee": {
     "exemple_2028-2029": {
       "B2": {

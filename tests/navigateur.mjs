@@ -11,7 +11,7 @@ const CHROME = process.env.CHROME ?? "C:/Program Files/Google/Chrome/Application
 const port = 9300 + Math.floor(Math.random() * 500);
 const profil = mkdtempSync(join(tmpdir(), "chrome-test-"));
 const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`,
-  `--user-data-dir=${profil}`, "--window-size=1366,2000", "about:blank"], { stdio: "ignore" });
+  `--user-data-dir=${profil}`, `--window-size=${process.env.LARGEUR ?? 1366},${process.env.HAUTEUR ?? 2000}`, "about:blank"], { stdio: "ignore" });
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let cible;
@@ -33,7 +33,8 @@ const cmd = (method, params = {}) => new Promise((r) => { const n = ++id; attent
 
 await cmd("Runtime.enable");
 await cmd("Page.enable");
-await cmd("Emulation.setDeviceMetricsOverride", { width: 1366, height: 2000, deviceScaleFactor: 1, mobile: false });
+const LARGEUR = +(process.env.LARGEUR ?? 1366), HAUTEUR = +(process.env.HAUTEUR ?? 2000);
+await cmd("Emulation.setDeviceMetricsOverride", { width: LARGEUR, height: HAUTEUR, deviceScaleFactor: 1, mobile: LARGEUR < 700 });
 await cmd("Page.navigate", { url: adresse });
 await pause(+attente);
 for (const sel of clics.split("||").filter(Boolean)) {
