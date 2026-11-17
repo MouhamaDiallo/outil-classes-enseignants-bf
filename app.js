@@ -287,8 +287,6 @@ function installerCarte() {
   curseur.max = etat.donnees.annees_historique.length - 1;
   curseur.value = curseur.max;
   curseur.addEventListener("input", () => { dessinerCarte(); dessinerListePriorites(); dessinerBilanClasses(); });
-  $("#legende-carte").innerHTML = CLASSES.map((c) =>
-    `<span><i class="pastille c-${c}">${LETTRES[c]}</i>${LIBELLES[c]} : ${EXPLICATIONS[c]}</span>`).join("");
 }
 
 function anneeCarte() { return etat.donnees.annees_historique[+$("#annee-carte").value]; }
@@ -302,25 +300,29 @@ function dessinerCarte() {
     const l = etat.parCle?.[`${a}|${nom}`];
     const prov = etat.donnees.provinces.find((p) => p.nom === nom);
     const h = prov?.historique[a];
-    couche.setStyle({ fillColor: l ? css(`--${l.priorite}`) : css("--non"), color: css("--contour-carte") });
+    // les 19 provinces de la liste officielle « à fort défi sécuritaire » : contour en pointillé
+    couche.setStyle({ fillColor: l ? css(`--${l.priorite}`) : css("--non"),
+      ...(prov?.zone_officielle ? { color: css("--texte"), weight: 2.2, dashArray: "5 4" } : { color: css("--contour-carte"), weight: 1, dashArray: null }) });
+    if (prov?.zone_officielle) couche.bringToFront();
     couche.bindTooltip(l
-      ? `<b>${titre(nom)}</b> (${titre(prov.region_ancienne)})<br>${LIBELLES[l.priorite]}<br>${fmt(h.eleves_par_maitre, 1)} élèves par maître · ${fmt(h.eleves_par_salle, 1)} par salle${l.correction ? `<br><i>Correction : ${esc(l.correction)}</i>` : ""}`
+      ? `<b>${titre(nom)}</b> (${titre(prov.region_ancienne)})<br>${LIBELLES[l.priorite]}${prov.zone_officielle ? " · liste officielle des 19" : ""}<br>${fmt(h.eleves_par_maitre, 1)} élèves par maître · ${fmt(h.eleves_par_salle, 1)} par salle${l.correction ? `<br><i>Correction : ${esc(l.correction)}</i>` : ""}`
       : `<b>${titre(nom)}</b><br>Pas de données en ${a}`, { sticky: true });
   });
 }
 
+// Sous la carte : la légende avec le nombre de provinces de chaque catégorie pour l'année choisie,
+// et la comparaison avec la liste officielle (contour en pointillé sur la carte).
 function dessinerListePriorites() {
-  const a = anneeCarte();
-  const groupes = CLASSES.slice(0, 3).map((c) => {
-    const l = etat.binaires.filter((x) => x.annee === a && x.priorite === c).sort((x, y) => y.ecart_plafond - x.ecart_plafond);
-    return `<p><i class="pastille c-${c}">${LETTRES[c]}</i> <b>${LIBELLES[c]} (${l.length})</b> : ${l.map((x) => lienProv(x.province)).join(", ") || "aucune"}</p>`;
-  });
+  const a = anneeCarte(), lignes = etat.binaires.filter((x) => x.annee === a);
+  const n = (c) => lignes.filter((x) => x.priorite === c).length;
+  $("#legende-carte").innerHTML = CLASSES.map((c) =>
+    `<span title="${EXPLICATIONS[c]}"><i class="pastille c-${c}">${LETTRES[c]}</i>${LIBELLES[c]} <b>(${n(c)})</b></span>`).join("")
+    + `<span><i class="pastille contour-officiel"></i>liste officielle des 19 provinces</span>`;
   const liste = new Set(etat.donnees.provinces.filter((p) => p.zone_officielle).map((p) => p.nom));
-  const besoin = new Set(etat.binaires.filter((x) => x.annee === a && ["urgence", "surcharge", "vigilance"].includes(x.priorite)).map((x) => x.province));
-  const oubliees = [...besoin].filter((x) => !liste.has(x)).map(titre);
-  const sansBesoin = [...liste].filter((x) => !besoin.has(x)).map(titre);
-  $("#liste-priorites").innerHTML = `<h3>Provinces à surveiller en ${a}</h3>${groupes.join("")}
-    <p class="note">Comparaison avec la liste officielle des 19 provinces « à fort défi sécuritaire » : besoin réel hors liste : ${oubliees.join(", ") || "aucune"} ; dans la liste sans besoin fort cette année : ${sansBesoin.join(", ") || "aucune"}.</p>`;
+  const besoin = new Set(lignes.filter((x) => ["urgence", "surcharge", "vigilance"].includes(x.priorite)).map((x) => x.province));
+  const oubliees = [...besoin].filter((x) => !liste.has(x)).map((x) => lienProv(x));
+  const sansBesoin = [...liste].filter((x) => !besoin.has(x)).map((x) => lienProv(x));
+  $("#comparaison-officielle").innerHTML = `<b>Par rapport à la liste officielle :</b> besoin réel hors liste : ${oubliees.join(", ") || "aucune"} ; dans la liste sans besoin fort en ${a} : ${sansBesoin.join(", ") || "aucune"}.`;
 }
 
 function optionsGraphe(axeY) {

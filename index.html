@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=35">
+  <link rel="stylesheet" href="style.css?v=36">
 </head>
 <body>
   <header class="entete">
@@ -54,6 +54,7 @@
           </figcaption>
           <div id="carte" class="carte" role="img" aria-label="Carte des 45 provinces colorées par classe de priorité"></div>
           <div class="legende" id="legende-carte"></div>
+          <p class="note" id="comparaison-officielle"></p>
         </figure>
         <section class="bloc a-faire" id="a-faire">
           <h2>Ce qu'il faut faire</h2>
@@ -65,14 +66,11 @@
         <h3>Les alertes de 2024-2025 : le problème, et la solution</h3>
         <div id="alertes" class="liste-alertes"></div>
       </section>
-      <div class="grille-2">
-        <figure class="graphe-bloc">
+      <figure class="graphe-bloc">
           <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
           <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
           <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le bloc « Classes, enseignants et salles »).</p>
         </figure>
-        <div id="liste-priorites" class="bloc"></div>
-      </div>
       <div id="bilan-classes" class="bloc"></div>
       <div class="etape-suivante"><a href="#simulateur">Étape suivante : Ajuster le plan dans le simulateur →</a></div>
     </section>
@@ -256,6 +254,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=35"></script>
+  <script type="module" src="app.js?v=36"></script>
 </body>
 </html>

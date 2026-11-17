@@ -365,3 +365,5 @@ details.autres .puces { margin-top: .35rem; }
 .prov-alerte { font-size: .88rem; color: var(--texte-2); }
 .texte-solution { font-size: .97rem; color: var(--texte); }
 @media (max-width: 760px) { .ligne-alerte { gap: 0; } }
+.pastille.contour-officiel { background: transparent; border: 2px dashed var(--texte); }
+#comparaison-officielle { margin-top: .5rem; }
