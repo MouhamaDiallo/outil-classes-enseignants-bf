@@ -143,16 +143,21 @@ function recalculerBinaires() {
 // Somme sur les provinces d'un indicateur de l'historique (année a).
 const somme = (a, cle) => etat.donnees.provinces.reduce((t, q) => t + (q.historique[a]?.[cle] ?? 0), 0);
 
+// Élèves au-delà du plafond de l'année, province par province (élèves − plafond × classes).
+const surnombre = (a) => etat.donnees.provinces.reduce((t, q) => {
+  const h = q.historique[a];
+  return t + (h ? Math.max(0, h.eleves - etat.p.plafond_par_annee[a] * h.groupes_pedagogiques) : 0);
+}, 0);
+
 function dessinerTuiles() {
   const d = etat.donnees, a0 = d.annees_historique[0], a1 = d.annees_historique.at(-1);
   const n0 = d.national[a0], n1 = d.national[a1];
   const var_ = (x, y) => `${y >= x ? "+" : ""}${fmt((100 * (y - x)) / x)} % depuis ${a0}`;
-  const urg = (a) => etat.binaires.filter((l) => l.annee === a && l.priorite === "urgence").length;
   $("#tuiles").innerHTML = [
     ["Enseignants du primaire public", fmt(n1.enseignants_total), var_(n0.enseignants_total, n1.enseignants_total)],
     ["Enseignants devant une classe", fmt(n1.maitres), var_(n0.maitres, n1.maitres)],
     ["Enseignants sans classe (hors directeurs)", fmt(somme(a1, "sans_classe")), `${fmt(somme(a0, "sans_classe"))} en ${a0}`],
-    [`Provinces en urgence en ${a1}`, fmt(urg(a1)), `${fmt(urg(a0))} en ${a0}`],
+    [`Élèves au-dessus du plafond (${etat.p.plafond_par_annee[a1]} par classe) en ${a1}`, fmt(surnombre(a1)), `${fmt(surnombre(a0))} en ${a0}`],
   ].map(([l, v, e]) => `<div class="tuile"><div class="libelle">${l}</div><div class="valeur">${v}</div><div class="ecart">${e}</div></div>`).join("");
 }
 
