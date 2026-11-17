@@ -159,11 +159,12 @@
   "explication_redeploiement": "Part maximale, chaque année, des enseignants sans classe disponibles (après les besoins de la province et la réserve) qu'une province peut envoyer dans une autre province de la même ancienne région. Par défaut 100 % : pas de limite arbitraire (règle de non-dégradation décidée le 13/11 et confirmée le 15/11). À baisser si le ministère connaît la capacité réelle de son administration à déplacer des enseignants.",
   "securite": {
     "scenario": "reprise",
-    "rattrapage_pct": 19,
+    "rattrapage_pct": 34,
     "debut": "2027-2028",
-    "rythme_pct": 40,
+    "rythme_pct": 60,
     "salles_reutilisables_pct": 100,
-    "explication": "Chaque année, une province rattrape une part k de l'écart entre ses élèves et son niveau d'avant la crise (2018-19, à la population de l'année) : E(t) = T(t) + k × max(0, R(t) − T(t)). « reprise » : k = rattrapage_pct (19 %, observé : calé sur 2022-23 → 2023-24, vérifié sur 2024-25 à −0,2 % près, voir 15_test_retrospectif.py). « figee » : plus aucune réouverture à partir de « debut » (k = 0). « retour » : k = rythme_pct à partir de « debut ». Avant « debut », k observé. Les élèves rattrapés reviennent avec les salles de leurs écoles (salles par élève de 2018-19, dont salles_reutilisables_pct % utilisables)."
+    "explication": "Chaque année, une province rattrape une part k de l'écart entre ses élèves et son niveau d'avant la crise (2018-19, à la population de l'année), sans dépasser +c % d'élèves en un an : E(t) = T(t) + min(k × max(0, R(t) − T(t)) ; c × T(t)). Calage sur 2022-23 → 2023-24 seulement : c = 20 % (la valeur qui donne l'écart médian par province le plus faible), puis k = 34 % (la valeur qui annule l'écart national). Vérification sur 2024-25, que le calage n'a pas vue : +0,3 % pour le pays (15_test_retrospectif.py). « reprise » : k = rattrapage_pct. « figee » : plus aucune réouverture à partir de « debut » (k = 0). « retour » : k = rythme_pct à partir de « debut ». Avant « debut », k observé. La limite c s'applique toujours. Les élèves rattrapés reviennent avec les salles de leurs écoles (salles par élève de 2018-19, dont salles_reutilisables_pct % utilisables).",
+    "plafond_rattrapage_pct": 20
   },
   "classes_definitives": true,
   "explication_classes_definitives": "Une classe ouverte reste ouverte jusqu'en 2030-31 : pas de fermeture en cours de plan (décision de l'équipe, 15/11). Sans cette règle, le plan ouvrait des classes en double flux qui fermaient en 2029-30 (1 420 classes).",

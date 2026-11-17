@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=56">
+  <link rel="stylesheet" href="style.css?v=58">
 </head>
 <body>
   <header class="entete">
@@ -136,13 +136,13 @@
           <fieldset>
             <legend>Sécurité</legend>
             <label>Scénario <select id="securite">
-              <option value="reprise">Reprise observée (19 % par an)</option>
+              <option value="reprise">Reprise observée (34 % de l'écart par an)</option>
               <option value="figee">Plus aucune réouverture</option>
               <option value="retour">Retour plus rapide</option></select></label>
             <label>À partir de <select id="securite-debut"></select></label>
             <label>Part de l'écart rattrapée chaque année <output data-pour="securite-rythme"></output>
-              <input type="range" id="securite-rythme" min="20" max="100" step="5" value="40"></label>
-            <p class="note">L'écart, c'est ce qui manque à une province pour retrouver ses élèves d'avant la crise (2018-2019). Les élèves qui reviennent retrouvent les salles de leurs écoles. Avant l'année choisie, la reprise observée s'applique.</p>
+              <input type="range" id="securite-rythme" min="20" max="100" step="5" value="60"></label>
+            <p class="note">L'écart, c'est ce qui manque à une province pour retrouver ses élèves d'avant la crise (2018-2019). Les élèves qui reviennent retrouvent les salles de leurs écoles. Avant l'année choisie, la reprise observée s'applique. Dans tous les cas, une province ne gagne pas plus de 20 % d'élèves en un an.</p>
           </fieldset>
           <fieldset>
             <legend>Coûts</legend>
@@ -264,6 +264,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=56"></script>
+  <script type="module" src="app.js?v=58"></script>
 </body>
 </html>

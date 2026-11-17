@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=56";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=58";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
@@ -588,7 +588,7 @@ function dessinerRecommandations() {
   const nb = (x, mot, pluriel = mot + "s") => `${fmt(x)} ${x > 1 ? pluriel : mot}`;
   $("#reco-resume").innerHTML = `<p>En <b>${a}</b> :</p>${resumePlan(lignes, a)}`
     + `<p class="note">${somme("recrues") === 0 ? "Aucune recrue supplémentaire n'est nécessaire pour ouvrir ces classes. " : ""}`
-    + `Les recrues comptées ici servent seulement à ouvrir des classes : les recrutements pour remplacer les départs (retraites, démissions, abandons de poste) restent nécessaires et ne sont pas calculés par l'outil.</p>`;
+    + `Un ETA (abri temporaire) dure 3 ans, puis il faut le renouveler. Les recrues comptées ici servent seulement à ouvrir des classes : les recrutements pour remplacer les départs (retraites, démissions, abandons de poste) restent nécessaires et ne sont pas calculés par l'outil.</p>`;
   const li = (l) => `<li>${lienProv(l.province)} (${titre(l.region)}) : ${phraseProvince(l, a)}.</li>`;
   $("#reco-liste").innerHTML = actives.slice(0, 6).map(li).join("") || "<li>Aucune action nécessaire cette année.</li>";
   $("#reco-suite").hidden = actives.length <= 6;
@@ -617,7 +617,7 @@ function phraseProvince(l, a, avecSecurite = true) {
     if (l.recrues) ens.push(nb(l.recrues, "recrue"));
     if (ens.length) morceaux.push(`enseignants : ${ens.join(", ")}`);
     const sal = [];
-    if (l.eta) sal.push(`${fmt(l.eta)} ETA à installer ou renouveler (un ETA dure 3 ans)`);
+    if (l.eta) sal.push(`${fmt(l.eta)} ETA à installer ou renouveler`);
     if (l.salles_dur) sal.push(nb(l.salles_dur, "salle en dur", "salles en dur") + " à construire");
     if (l.double_flux) sal.push(`${nb(l.double_flux, "classe")} en double flux`);
     if (l.eta + l.salles_dur + l.double_flux < l.classes_supplementaires) sal.push(sal.length ? "le reste dans des salles déjà construites" : "dans des salles déjà construites");
@@ -781,9 +781,13 @@ function dessinerFiche() {
   const nouv = prov.nouvelles.map((n) => `${n.province} (région ${n.region}${n.part_pop_2019 < 1 ? `, ${fmt(100 * n.part_pop_2019)} % de la population` : ""})`).join(", ");
   const plan = etat.plan.filter((x) => x.province === nom);
   const actifs = Object.keys(etat.p.variables).filter((c) => l[c] === 1).map((c) => `${c} ${etat.p.variables[c].nom.toLowerCase()}`);
-  const t = [["Année", "Élèves projetés", "Plafond", "Élèves par classe sans action", "avec le plan", "Sans classe de la province", "Venus de la région", "Recrues", "ETA", "Salles en dur", "Double flux"]];
-  plan.forEach((x) => t.push([x.annee, fmt(x.eleves), x.plafond, fmt(x.eleves_par_classe_sans_action, 1), fmt(x.eleves_par_classe_avec_plan, 1), fmt(x.suppleants), fmt(x.redeployes_recus), fmt(x.recrues), fmt(x.eta), fmt(x.salles_dur), fmt(x.double_flux)]));
-  const recos = plan.map((x) => `<li><b>${x.annee}</b> (plafond ${x.plafond}) : ${phraseProvince(x, x.annee, false)}.</li>`).join("");
+  const recos = plan.map((x) => `<li><b>${x.annee}</b> (${fmt(x.eleves)} élèves prévus, plafond ${x.plafond}) : ${phraseProvince(x, x.annee, false)}.</li>`).join("");
+  // la prévision a-t-elle marché dans cette province ? (test sur 2024-25, que le calage n'a pas vu)
+  const tp = prov.test_prevision;
+  const verdict = !tp ? "" : Math.abs(tp.ecart_pct) <= 5 ? "la prévision est fiable ici"
+    : Math.abs(tp.ecart_pct) <= 10 ? "la prévision est à vérifier avec la direction provinciale"
+    : "la prévision est fragile ici (la sécurité change vite) : à confirmer avec la direction provinciale";
+  const test = tp ? `<p class="test-province"><b>Notre prévision a-t-elle marché ici ?</b> Pour ${tp.annee}, sans connaître ce chiffre, l'outil a prévu ${fmt(tp.prevu)} élèves ; l'annuaire en a compté ${fmt(tp.reel)} (écart ${tp.ecart_pct > 0 ? "+" : ""}${fmt(tp.ecart_pct, 1)} %) : ${verdict}.</p>` : "";
   const securite = prov.zone_officielle && plan.some((x) => x.redeployes_recus > 0 || x.recrues > 0)
     ? `<p class="alerte-securite"><b>Province à fort défi sécuritaire :</b> les affectations prévues ci-dessous sont à accompagner (prime, logement, volontariat).</p>` : "";
   $("#fiche").innerHTML = `
@@ -797,11 +801,10 @@ function dessinerFiche() {
     </div>
     <figure class="graphe-bloc"><figcaption><span class="titre-fig">Élèves par maître, ${ah[0]} à ${a}</span></figcaption><div class="graphe"><canvas id="g-fiche"></canvas></div></figure>
     <h3>Ce que le plan recommande à la province</h3>
+    ${test}
     ${securite}
     <ul class="liste-reco">${recos || "<li>Plan en cours de calcul…</li>"}</ul>
-    <p class="note">Scénario actuel du simulateur. Les recrutements pour remplacer les départs (retraites, démissions) restent nécessaires ; ils ne sont pas calculés ici.</p>
-    <h3>Le plan en chiffres</h3>
-    <div class="tableau-defile"><table class="tableau">${tableauHtml(t)}</table></div>
+    <p class="note">Scénario actuel du simulateur. Un ETA (abri temporaire) dure 3 ans, puis il faut le renouveler. Les recrutements pour remplacer les départs (retraites, démissions) restent nécessaires ; ils ne sont pas calculés ici. Le détail chiffré se télécharge depuis « Le simulateur » (CSV).</p>
     <p class="note">Sources : annuaires DGESS du primaire ; CONASUR ; INSD (projections) ; OCHA (découpage). Moyennes provinciales : des écoles peuvent rester surchargées. Fiche produite par l'outil, à vérifier avec les données de la direction.</p>`;
   const annees = ah.filter((x) => prov.historique[x]);
   graphe("g-fiche", { type: "line", data: { labels: annees, datasets: [
@@ -835,7 +838,7 @@ function ecrireMethode() {
     <ol class="formules">
       <li><b>Élèves de l'année suivante, si seule la population change</b> (09_demande.py)<br><code>T(t) = E(t−1) × P(t) / P(t−1)</code></li>
       <li><b>Niveau d'avant la crise, à la population de l'année</b><br><code>R(t) = E(2018-2019) × P(t) / P(2020)</code> (les projections de l'INSD commencent en 2020)</li>
-      <li><b>Élèves projetés : la population, plus le retour d'une partie des élèves partis</b><br><code>E(t) = T(t) + k × max(0 ; R(t) − T(t))</code><br>k = part de l'écart rattrapée chaque année. <b>k = 19 %</b> : c'est la valeur qui annule l'écart national sur 2022-23 → 2023-24 ; elle est ensuite vérifiée sur 2024-25 (tableau plus bas). Exemple : une province de 10 000 élèves, 6-11 ans en hausse de 2 %, 15 000 élèves avant la crise : T = 10 200 ; E = 10 200 + 0,19 × 4 800 = 11 112.</li>
+      <li><b>Élèves projetés : la population, plus le retour d'une partie des élèves partis</b><br><code>E(t) = T(t) + min(k × max(0 ; R(t) − T(t)) ; c × T(t))</code><br>k = part de l'écart rattrapée chaque année ; c = hausse maximale en un an. Les deux sont calés sur 2022-23 → 2023-24 seulement : <b>c = 20 %</b> (la valeur qui donne l'écart médian par province le plus faible), puis <b>k = 34 %</b> (la valeur qui annule l'écart national). Ils sont ensuite vérifiés sur 2024-25 (tableau plus bas). Sans la limite c, une province qui a perdu beaucoup d'élèves, comme la Tapoa, doublerait en un an.<br>Exemple : une province de 10 000 élèves, 6-11 ans en hausse de 2 %, 15 000 élèves avant la crise : T = 10 200 ; 0,34 × 4 800 = 1 632, sous la limite de 0,20 × 10 200 = 2 040 ; donc E = 11 832. Si l'écart était de 20 000 : 0,34 × 20 000 = 6 800, au-dessus de la limite ; donc E = 10 200 + 2 040 = 12 240.</li>
       <li><b>Salles rendues par les écoles qui rouvrent</b><br><code>salles rendues(t) = (E(t) − E(2024-2025) × P(t) / P(2024)) × salles(2018-2019) / élèves(2018-2019)</code></li>
       <li><b>Enseignants sans classe</b> (annuaire, tableau IV.1.1 ; 10_optimisation.py)<br><code>sans classe = max(0 ; titulaires + suppléants − enseignants tenant une classe)</code>. Ils couvrent d'abord les classes sans enseignant attitré (<code>G − maîtres</code>) ; 80 % des autres peuvent ouvrir une classe (20 % de réserve).</li>
       <li><b>Élèves au-dessus du plafond</b> (le chiffre que le plan réduit)<br><code>surnombre(province, t) = max(0 ; E(t) − plafond(t) × G(t))</code>, puis somme des provinces. C'est un calcul par province : les écarts entre écoles n'y sont pas.</li>
@@ -871,11 +874,11 @@ function ecrireMethode() {
     <h2>Vérifications</h2>
     <p>Les totaux des provinces retombent sur les totaux nationaux publiés par la DGESS (par exemple 13 558 écoles en 2023-24). Le moteur de l'application redonne exactement les résultats des calculs faits en Python (0 écart sur les priorités ; moins de 0,03 % sur la courbe de rendement).</p>
     <h2>Les enseignants sont-ils affectés selon les élèves ?</h2>
-    <p>C'est l'indicateur de cohérence du diagnostic national (RESEN) : la part de l'affectation des enseignants qui ne s'explique pas par le nombre d'élèves. Le RESEN le calcule école par école (29 % en 2013-14) ; faute de données publiques par école, nous le calculons province par province, où les écarts entre écoles se compensent : 9 % en 2017-18, 5 % en 2024-25. Le plan le ramène à environ 2 %, et surtout resserre les extrêmes : en 2025-26, le pire ratio passe de 125 (sans action) à 62 élèves par maître, et l'écart-type entre provinces de 21 à 7,4.</p>
+    <p>C'est l'indicateur de cohérence du diagnostic national (RESEN) : la part de l'affectation des enseignants qui ne s'explique pas par le nombre d'élèves. Le RESEN le calcule école par école (29 % en 2013-14) ; faute de données publiques par école, nous le calculons province par province, où les écarts entre écoles se compensent : 9 % en 2017-18, 5 % en 2024-25. Le plan le ramène à environ 2 %, et surtout resserre les extrêmes : en 2025-26, le pire ratio passe de 133 (sans action) à 64 élèves par maître, et l'écart-type entre provinces de 18,5 à 7,3.</p>
     <h2>Les prévisions ont-elles été testées ?</h2>
     <p>Oui. On se place dans le passé, on prévoit une année avec la formule de l'outil, puis on compare avec ce que l'annuaire a compté. Le coefficient k a été calé sur 2022-23 → 2023-24 seulement : <b>l'année 2024-25 ne lui a pas servi, c'est la vraie épreuve.</b></p>
     ${tableauTest()}
-    <p>Avec le rattrapage, l'outil prévoit les élèves de 2024-25 à <b>0,2 % près</b> pour le pays, contre 5 % avec la population seule. Quelques provinces frontalières restent mal prévues (Tapoa, Kompienga, Sourou, Yagha) : elles dépendent d'événements de sécurité qu'aucune formule ne prévoit. Pendant les fermetures massives (2022-23), aucune méthode ne pouvait prévoir la chute. <b>Dès que l'annuaire 2025-26 paraîtra, on compare la prévision de 2025-26 à la réalité, on recale k</b> (15_test_retrospectif.py) et on relance le plan.</p>
+    <p>Avec le rattrapage, l'outil prévoit les élèves de 2024-25 à <b>0,3 % près</b> pour le pays, contre 5 % avec la population seule, et 27 provinces sur 45 à 5 % près (22 avec la population seule). Grâce à la limite de 20 % par an, la pire province est à 41 % d'écart, au lieu de 118 % sans limite. Les provinces frontalières (Tapoa, Kompienga, Sourou, Yagha) restent les moins bien prévues : elles dépendent d'événements de sécurité qu'aucune formule ne prévoit. Chaque fiche province donne son propre test. Pendant les fermetures massives (2022-23), aucune méthode ne pouvait prévoir la chute. <b>Dès que l'annuaire 2025-26 paraîtra, on compare la prévision de 2025-26 à la réalité, on recale k et c</b> (15_test_retrospectif.py) et on relance le plan.</p>
     <h2>Les sources</h2>
     <ul>${etat.donnees.sources.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
 }

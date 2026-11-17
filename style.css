@@ -433,3 +433,5 @@ td.nombre { text-align: right; white-space: nowrap; }
 .aide-tuile { margin-top: .4rem; font-size: .8rem; color: var(--texte-2); }
 .aide-tuile summary { cursor: pointer; color: var(--accent); font-weight: 700; }
 .aide-tuile p { margin: .3rem 0 0; }
+/* fiche : le test de la prévision dans la province */
+.test-province { background: var(--ciel); border-left: 4px solid var(--accent); padding: .5rem .8rem; border-radius: 3px; }

@@ -78,11 +78,11 @@ export function disponibilite(q) {
 }
 
 // Élèves projetés et salles rendues par les écoles qui rouvrent (même calcul que serie() dans
-// analyse/10_optimisation.py) : T(t) = E(t-1) × croissance des 6-11 ans ; E(t) = T(t) + k(t) × max(0, R(t) - T(t)),
+// analyse/10_optimisation.py) : T(t) = E(t-1) × croissance des 6-11 ans ; E(t) = T(t) + min(k(t) × max(0, R(t) - T(t)) ; c × T(t)),
 // R(t) = niveau d'avant la crise. k(t) = rattrapage observé avant « debut », puis 0 (« figee »),
 // le rattrapage observé (« reprise ») ou rythme_pct (« retour »). Renvoie { eleves: {année: x}, salles: {année: n} }.
 export function serieEleves(p, q, annees) {
-  const sc = p.securite, kObs = sc.rattrapage_pct / 100;
+  const sc = p.securite, kObs = sc.rattrapage_pct / 100, c = sc.plafond_rattrapage_pct / 100;
   const kApres = { figee: 0, reprise: kObs, retour: (sc.rythme_pct ?? 40) / 100 }[sc.scenario];
   const h0 = q.historique["2018-2019"];
   const sallesParEleve = ((h0.salles / h0.eleves) * (sc.salles_reutilisables_pct ?? 100)) / 100;
@@ -91,7 +91,7 @@ export function serieEleves(p, q, annees) {
   for (const a of annees) {
     const k = a < sc.debut ? kObs : kApres, g = q.croissance[a];
     const t = e * g;
-    e = t + k * Math.max(0, q.reference[a] - t);
+    e = t + Math.min(k * Math.max(0, q.reference[a] - t), c * t);
     seul *= g;
     eleves[a] = e;
     salles[a] = Math.floor(Math.max(0, e - seul) * sallesParEleve);
