@@ -423,3 +423,9 @@ a.lien-prov::after { content: " ↗"; font-size: .8em; text-decoration: none; di
 .formules code { background: var(--ciel); padding: .05rem .3rem; border-radius: 3px; font-size: .92em; white-space: normal; }
 .ligne-forte td { font-weight: 700; background: color-mix(in srgb, var(--stable) 14%, transparent); }
 td.nombre { text-align: right; white-space: nowrap; }
+/* la colonne des réglages ne déborde jamais sur les résultats */
+.simu > * { min-width: 0; }
+.commandes select, .commandes input { max-width: 100%; box-sizing: border-box; }
+.commandes select { width: 100%; }
+.frise-defile { max-width: 100%; overflow-x: auto; }
+@media (max-width: 600px) { .grille-accueil .resume-plan li { padding-left: 0; text-indent: 0; } .grille-accueil .resume-plan li b.etiquette { display: block; width: auto; } }

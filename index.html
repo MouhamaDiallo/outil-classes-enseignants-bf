@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=51">
+  <link rel="stylesheet" href="style.css?v=54">
 </head>
 <body>
   <header class="entete">
@@ -136,9 +136,9 @@
           <fieldset>
             <legend>Sécurité</legend>
             <label>Scénario <select id="securite">
-              <option value="reprise">La reprise observée continue (19 % de l'écart rattrapé par an)</option>
+              <option value="reprise">Reprise observée (19 % par an)</option>
               <option value="figee">Plus aucune réouverture</option>
-              <option value="retour">Retour plus rapide à la normale</option></select></label>
+              <option value="retour">Retour plus rapide</option></select></label>
             <label>À partir de <select id="securite-debut"></select></label>
             <label>Part de l'écart rattrapée chaque année <output data-pour="securite-rythme"></output>
               <input type="range" id="securite-rythme" min="20" max="100" step="5" value="40"></label>
@@ -271,6 +271,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=51"></script>
+  <script type="module" src="app.js?v=54"></script>
 </body>
 </html>

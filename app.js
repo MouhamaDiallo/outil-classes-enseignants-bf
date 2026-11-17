@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=54";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
