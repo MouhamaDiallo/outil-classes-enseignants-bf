@@ -161,36 +161,51 @@ function dessinerTuiles() {
 function dessinerAlertes() {
   const d = etat.donnees, a = d.annees_historique.at(-1), plafond = etat.p.plafond_par_annee[a];
   const reserve = etat.p.reserve_suppleants_pct / 100;
-  const liste = (xs) => xs.length > 6 ? `${xs.slice(0, 6).join(", ")} et ${xs.length - 6} autres` : xs.join(", ");
   const P = d.provinces.map((q) => {
     const h = q.historique[a], g = h.groupes_pedagogiques, m = h.maitres;
     const sansMaitre = Math.max(0, g - m), dispo = Math.floor(Math.max(0, h.sans_classe - sansMaitre) * (1 - reserve));
     const manque = Math.max(0, sansMaitre - h.sans_classe);
     const besoin = Math.max(0, Math.ceil((h.eleves - plafond * (g - manque)) / plafond));
-    return { nom: lienProv(q.nom), besoin, dispo, sansMaitre, manque, sansSalle: Math.max(0, g - h.salles), zone: q.zone_officielle };
+    return { nom: q.nom, besoin, dispo, manque, sansSalle: Math.max(0, g - h.salles) };
   });
   const A = P.filter((x) => x.besoin > 0 && x.dispo >= x.besoin).sort((x, y) => y.besoin - x.besoin);
-  const B = P.filter((x) => x.besoin > 0 && x.dispo < x.besoin).sort((x, y) => (y.besoin - y.dispo) - (x.besoin - x.dispo));
+  const B = P.filter((x) => x.besoin > 0 && x.dispo < x.besoin).map((x) => ({ ...x, manquent: x.besoin - x.dispo })).sort((x, y) => y.manquent - x.manquent);
   const C = P.filter((x) => x.besoin === 0 && x.dispo >= 50).sort((x, y) => y.dispo - x.dispo);
-  const D = P.filter((x) => x.manque > 0), E = P.filter((x) => x.sansSalle > 0).sort((x, y) => y.sansSalle - x.sansSalle);
+  const D = P.filter((x) => x.manque > 0).sort((x, y) => y.manque - x.manque);
+  const E = P.filter((x) => x.sansSalle > 0).sort((x, y) => y.sansSalle - x.sansSalle);
   const tot = (xs, k) => xs.reduce((t, x) => t + x[k], 0);
-  const alertes = [];
-  if (A.length) alertes.push(["Classes surchargées, mais des enseignants sans classe sur place",
-    `${A.length} provinces : ${liste(A.map((x) => `${x.nom} (${fmt(x.besoin)} classes)`))}.`,
-    `Mettre ces enseignants, déjà payés, devant de nouvelles classes ; trouver les salles (salle libre, ETA, salle en dur).`]);
-  if (B.length) alertes.push(["Classes surchargées, sans assez d'enseignants sur place",
-    `${B.length} provinces : ${liste(B.map((x) => `${x.nom} (il en manque ${fmt(x.besoin - x.dispo)})`))}.`,
-    `Faire venir des enseignants sans classe d'une autre province de la région, sinon recruter ; affectations à accompagner (prime, logement, volontariat).`]);
-  if (C.length) alertes.push(["Pas de surcharge, mais beaucoup d'enseignants sans classe",
-    `${C.length} provinces, ${fmt(tot(C, "dispo"))} enseignants mobilisables : ${liste(C.map((x) => `${x.nom} (${fmt(x.dispo)})`))}.`,
-    `Réserve à redéployer vers les provinces de la région qui en manquent ; vérifier sur le terrain s'il s'agit d'enseignants d'écoles fermées.`]);
-  if (D.length) alertes.push(["Classes restées sans enseignant attitré",
-    `${liste(D.map((x) => `${x.nom} (${fmt(x.manque)})`))}.`, `Affecter un enseignant en priorité.`]);
-  if (E.length) alertes.push(["Classes sans salle",
-    `${fmt(tot(E, "sansSalle"))} classes dans ${E.length} provinces : ${liste(E.map((x) => `${x.nom} (${fmt(x.sansSalle)})`))}.`,
-    `Installer un abri temporaire (ETA) ou construire, selon que le besoin dure ou non.`]);
-  $("#alertes").innerHTML = alertes.map(([t, ou, quoi]) => `<li><b>${t}</b> : ${ou}<span class="action">→ ${quoi}</span></li>`).join("")
-    || "<li>Aucune alerte.</li>";
+  // une étiquette par province (les 3 premières), le reste se déplie
+  const etiquettes = (xs, k) => {
+    const e = (x) => `<a class="puce-prov" href="#fiche-${encodeURIComponent(x.nom)}">${titre(x.nom)} <b>${fmt(x[k])}</b></a>`;
+    const reste = xs.slice(3);
+    return `<div class="puces">${xs.slice(0, 3).map(e).join("")}</div>`
+      + (reste.length ? `<details class="autres"><summary>+ ${reste.length} autre${reste.length > 1 ? "s" : ""}</summary><div class="puces">${reste.map(e).join("")}</div></details>` : "");
+  };
+  const cartes = [];
+  if (A.length) cartes.push({ niveau: "fort", titre: "Classes surchargées, enseignants disponibles sur place",
+    chiffre: fmt(tot(A, "besoin")), unite: `classes à ouvrir, ${A.length} provinces`, puces: etiquettes(A, "besoin"),
+    solution: "Mettre ces enseignants, déjà payés, devant de nouvelles classes. Il faut surtout des salles." });
+  if (B.length) cartes.push({ niveau: "fort", titre: "Classes surchargées, pas assez d'enseignants sur place",
+    chiffre: fmt(tot(B, "manquent")), unite: `enseignants manquent, ${B.length} provinces`, puces: etiquettes(B, "manquent"),
+    solution: "Faire venir des enseignants sans classe de la région, sinon recruter. Accompagner ces affectations (prime, logement)." });
+  if (D.length) cartes.push({ niveau: "fort", titre: "Classes sans enseignant attitré",
+    chiffre: fmt(tot(D, "manque")), unite: `classes, ${D.length} province${D.length > 1 ? "s" : ""}`, puces: etiquettes(D, "manque"),
+    solution: "Affecter un enseignant en priorité." });
+  if (E.length) cartes.push({ niveau: "moyen", titre: "Classes sans salle",
+    chiffre: fmt(tot(E, "sansSalle")), unite: `classes, ${E.length} provinces`, puces: etiquettes(E, "sansSalle"),
+    solution: "Abri temporaire si le besoin est passager, salle en dur s'il dure." });
+  if (C.length) cartes.push({ niveau: "ressource", titre: "Enseignants sans classe, sans surcharge sur place",
+    chiffre: fmt(tot(C, "dispo")), unite: `enseignants mobilisables, ${C.length} provinces`, puces: etiquettes(C, "dispo"),
+    solution: "Une réserve à redéployer dans la région. Vérifier s'ils viennent d'écoles fermées." });
+  $("#alertes").innerHTML = cartes.map((c) => `<article class="alerte niveau-${c.niveau}">
+      <div class="probleme">
+        <div class="etiq-zone">${c.niveau === "ressource" ? "Ressource" : "Le problème"}</div>
+        <h4>${c.titre}</h4>
+        <div class="gros-chiffre"><b>${c.chiffre}</b> <span>${c.unite}</span></div>
+        ${c.puces}
+      </div>
+      <div class="solution"><div class="etiq-zone">La solution</div><p>${c.solution}</p></div>
+    </article>`).join("") || "<p>Aucune alerte.</p>";
 }
 
 // Le plan d'une année, en quatre lignes : classes, enseignants, salles, résultat.
