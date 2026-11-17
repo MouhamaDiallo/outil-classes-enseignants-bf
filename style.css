@@ -303,3 +303,9 @@ a.lien-prov:hover { text-decoration-thickness: 2px; }
   .entete { gap: .6rem; padding-bottom: .3rem; }
   .sous-titre { font-size: .9rem; }
 }
+@media (max-width: 760px) {
+  .tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  .tuile { padding: .6rem .7rem; }
+  .tuile .valeur { font-size: 1.45rem; }
+  .tuile .libelle, .tuile .ecart { font-size: .8rem; }
+}

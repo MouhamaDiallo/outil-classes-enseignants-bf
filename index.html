@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
   <header class="entete">
@@ -44,7 +44,8 @@
     <p id="chargement" class="chargement" role="status">Chargement des données et des bibliothèques… (quelques secondes si la connexion est lente)</p>
     <!-- 1. La situation actuelle -->
     <section id="ecran-situation" class="ecran actif" role="tabpanel">
-      <div class="but-ecran"><span class="numero">1</span><div><p><b>Où agir, et quoi faire à la prochaine rentrée.</b></p><p class="quoi">La carte montre la priorité de chaque province ; le bloc « Ce qu'il faut faire » donne le plan de la rentrée. Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
+      <div class="but-ecran"><span class="numero">1</span><div><p><b>Le constat, où agir, et quoi faire à la prochaine rentrée.</b></p><p class="quoi">D'abord les chiffres clés, puis la carte de la priorité de chaque province, puis « Ce qu'il faut faire » : le plan de la rentrée. Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
+      <div class="tuiles" id="tuiles"></div>
       <div class="grille-accueil">
         <figure class="carte-bloc">
           <figcaption>
@@ -60,7 +61,6 @@
           <p><a href="#simulateur" class="lien-plan">Voir le plan détaillé, province par province et année par année →</a></p>
         </section>
       </div>
-      <div class="tuiles" id="tuiles"></div>
       <section class="bloc alertes-bloc">
         <h3>Ce qu'on observe aujourd'hui (2024-2025, avant le plan)</h3>
         <ul id="alertes" class="liste-reco"></ul>
