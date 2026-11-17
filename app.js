@@ -42,6 +42,10 @@ async function demarrer() {
   // un scénario enregistré garde ses choix ; les réglages apparus depuis prennent la valeur de référence
   const enregistre = chargerScenario();
   etat.p = enregistre ? { ...structuredClone(reference), ...enregistre } : structuredClone(reference);
+  // sécurité : le rattrapage observé vient toujours des données ; un ancien scénario (« actuelle ») devient « reprise »
+  const sc = { ...reference.securite, ...(enregistre?.securite ?? {}), rattrapage_pct: reference.securite.rattrapage_pct };
+  if (!["reprise", "figee", "retour"].includes(sc.scenario)) Object.assign(sc, { scenario: "reprise", rythme_pct: reference.securite.rythme_pct });
+  etat.p.securite = sc;
   Chart.defaults.font.family = "\"Andika\", \"Trebuchet MS\", sans-serif";
   installerAffichage();
   installerOnglets();
@@ -245,10 +249,12 @@ function resumePlan(l, a) {
   const ens = [`${fmt(s("suppleants"))} déjà payés et sans classe dans leur province`, `${fmt(s("redeployes_recus"))} venus d'une autre province de leur région`];
   ens.push(s("recrues") ? nb(s("recrues"), "recrue") : "<b>aucune recrue supplémentaire</b>");
   const ligne = (etiquette, texte) => `<li><b class="etiquette">${etiquette}</b>${texte}</li>`;
-  const sc = etat.p.securite ?? {};
-  const scenario = sc.scenario === "retour"
-    ? `retour progressif à la normale à partir de ${sc.debut} (${sc.rythme_pct} % des écoles fermées rouvrent chaque année, avec leurs élèves et leurs salles)`
-    : "la situation actuelle se prolonge";
+  const sc = etat.p.securite;
+  const scenario = {
+    reprise: `reprise observée (les élèves partis reviennent : ${sc.rattrapage_pct} % de l'écart par an)`,
+    figee: `plus aucune réouverture à partir de ${sc.debut}`,
+    retour: `retour plus rapide à la normale à partir de ${sc.debut} (${sc.rythme_pct} % de l'écart rattrapé par an)`,
+  }[sc.scenario];
   const hausse = l.reduce((t, x) => t + x.eleves, 0) - etat.donnees.national[etat.donnees.annees_historique.at(-1)].eleves;
   return `<ul class="resume-plan">
     ${ligne("Scénario", `${scenario} ; besoins projetés pour ${a} (${hausse >= 0 ? "+" : ""}${fmt(hausse)} élèves par rapport à 2024-2025)`)}
@@ -475,7 +481,7 @@ function lireScenarioDansCommandes() {
   $("#df-fin").value = interdit ? ap[Math.max(0, ap.indexOf(interdit) - 1)] : ap.at(-1);
   $("#df-fermetures").checked = lev.defaut.double_flux_si_fermetures;
   $("#definitives").checked = p.classes_definitives ?? false;
-  const sc = p.securite ?? { scenario: "actuelle", debut: ap[2], rythme_pct: 25 };
+  const sc = p.securite;
   $("#securite").value = sc.scenario;
   $("#securite-debut").value = sc.debut;
   $("#securite-rythme").value = sc.rythme_pct;
@@ -493,7 +499,7 @@ function afficherValeurs() {
   for (const [k, t] of Object.entries(textes)) document.querySelector(`output[data-pour="${k}"]`).textContent = t;
   $("#df-fin").disabled = !$("#df").checked;
   const retourActif = $("#securite").value === "retour";
-  $("#securite-debut").disabled = !retourActif;
+  $("#securite-debut").disabled = $("#securite").value === "reprise";
   $("#securite-rythme").disabled = !retourActif;
 }
 
@@ -801,6 +807,15 @@ function dessinerFiche() {
 }
 
 // ---------- 6. méthode ----------
+// Le test rétrospectif (15_test_retrospectif.py) : prévu contre réel, pour le pays.
+function tableauTest() {
+  const t = etat.donnees.test_retrospectif ?? [];
+  const role = { calage: "calage de k", verification: "<b>épreuve</b>", controle: "contrôle" };
+  const lignes = t.map((r) => `<tr${r.role === "verification" ? ' class="ligne-forte"' : ""}><td>${r.base} → ${r.prevue}</td><td>${r.methode}</td><td>${role[r.role]}</td>
+    <td class="nombre">${fmt(r.prevu)}</td><td class="nombre">${fmt(r.reel)}</td><td class="nombre">${r.ecart_national_pct > 0 ? "+" : ""}${fmt(r.ecart_national_pct, 1)} %</td>
+    <td class="nombre">${r.provinces_a_5_pct_pres} sur ${r.provinces}</td></tr>`).join("");
+  return `<div class="tableau-defile"><table class="tableau"><thead><tr><th>Années</th><th>Méthode</th><th>Rôle</th><th>Élèves prévus</th><th>Élèves comptés</th><th>Écart pays</th><th>Provinces à 5 % près</th></tr></thead><tbody>${lignes}</tbody></table></div>`;
+}
 function ecrireMethode() {
   $("#methode").innerHTML = `
     <h2>À quoi sert cet outil</h2>
@@ -811,6 +826,29 @@ function ecrireMethode() {
     <p>Chaque province reçoit chaque année des « oui / non » recalculés à partir des données : surcharge, fuite des maîtres, accueil de déplacés, fermetures d'écoles, manque de salles, croissance durable, donneuse possible. Ils donnent la classe de priorité. La liste officielle des zones à fort défi sécuritaire sert seulement à comparer. Tout est réglable dans l'écran « Les réglages ».</p>
     <h2>Le plan</h2>
     <p>Un programme linéaire décide, pour chaque province et chaque année de 2025-26 à 2030-31, combien de classes ouvrir, avec quel enseignant (d'abord un enseignant sans classe de la province, puis un enseignant sans classe d'une autre province de la même région, puis une recrue, comptée en années de salaire), et dans quelle salle : salle libre, abri temporaire (ETA, 3 ans), salle en dur ou double flux (deux groupes et deux enseignants par salle, en dernier recours, compté à moitié). Il réduit au maximum le nombre d'élèves au-delà du plafond, dans la limite de l'argent pour les salles et des postes de recrues. Les règles viennent des variables : ETA là où le besoin est lié aux déplacés ou aux fermetures, salle en dur là où la population va durablement croître.</p>
+    <h2>Les formules, pour refaire le calcul à la main</h2>
+    <p class="note">Notations : E = élèves du public d'une province ; P = enfants de 6 à 11 ans projetés par l'INSD (l'année scolaire 2025-2026 est rattachée à la population de 2025) ; G = classes (groupes pédagogiques) ; plafond = élèves par classe au plus. Chaque formule est écrite dans un script Python (entre parenthèses) et dans le moteur de l'application, qui donnent le même résultat.</p>
+    <ol class="formules">
+      <li><b>Élèves de l'année suivante, si seule la population change</b> (09_demande.py)<br><code>T(t) = E(t−1) × P(t) / P(t−1)</code></li>
+      <li><b>Niveau d'avant la crise, à la population de l'année</b><br><code>R(t) = E(2018-2019) × P(t) / P(2020)</code> (les projections de l'INSD commencent en 2020)</li>
+      <li><b>Élèves projetés : la population, plus le retour d'une partie des élèves partis</b><br><code>E(t) = T(t) + k × max(0 ; R(t) − T(t))</code><br>k = part de l'écart rattrapée chaque année. <b>k = 19 %</b> : c'est la valeur qui annule l'écart national sur 2022-23 → 2023-24 ; elle est ensuite vérifiée sur 2024-25 (tableau plus bas). Exemple : une province de 10 000 élèves, 6-11 ans en hausse de 2 %, 15 000 élèves avant la crise : T = 10 200 ; E = 10 200 + 0,19 × 4 800 = 11 112.</li>
+      <li><b>Salles rendues par les écoles qui rouvrent</b><br><code>salles rendues(t) = (E(t) − E(2024-2025) × P(t) / P(2024)) × salles(2018-2019) / élèves(2018-2019)</code></li>
+      <li><b>Enseignants sans classe</b> (annuaire, tableau IV.1.1 ; 10_optimisation.py)<br><code>sans classe = max(0 ; titulaires + suppléants − enseignants tenant une classe)</code>. Ils couvrent d'abord les classes sans enseignant attitré (<code>G − maîtres</code>) ; 80 % des autres peuvent ouvrir une classe (20 % de réserve).</li>
+      <li><b>Élèves au-dessus du plafond</b> (le chiffre que le plan réduit)<br><code>surnombre(province, t) = max(0 ; E(t) − plafond(t) × G(t))</code>, puis somme des provinces. C'est un calcul par province : les écarts entre écoles n'y sont pas.</li>
+      <li><b>Le programme linéaire</b> (10_optimisation.py, solveur CBC ; moteur.js, solveur GLPK)<br>
+        Pour chaque province q et chaque année t, le modèle choisit : les classes ouvertes O, les enseignants sans classe de la province S, ceux venus d'une autre province de la région D, les recrues N, les abris temporaires A, les salles en dur B et les classes en double flux F.<br>
+        <b>Il minimise</b> <code>Σ surnombre + 50 % × plafond × F</code> (un groupe en double flux perd la moitié de ses heures) ; à égalité, il choisit le moins d'années de salaire de recrues, puis la plus petite dépense.<br>
+        <b>Contraintes :</b>
+        <ul>
+          <li>enseignants : <code>O(q,t) ≤ S(q,t) + D(q,t) + Σ N(q, jusqu'à t)</code>, avec <code>S + enseignants envoyés ≤ sans classe disponibles</code> ;</li>
+          <li>salles : <code>O(q,t) ≤ salles libres + salles rendues + Σ B + Σ A des 3 dernières années + F</code> ;</li>
+          <li>argent : <code>Σ (3 M × A + 15,7 M × B) ≤ argent pour les salles de l'année</code> ; postes : <code>Σ N ≤ postes de l'année</code> ;</li>
+          <li>une classe ouverte reste ouverte : <code>O(q,t) ≥ O(q,t−1)</code> ;</li>
+          <li>surnombre : <code>surnombre(q,t) ≥ E(q,t) − plafond(t) × (G0 + O(q,t))</code> ;</li>
+          <li>règles « oui / non » : ETA seulement avec des déplacés ou des fermetures, et sans croissance durable ; pas de double flux là où des écoles ont fermé.</li>
+        </ul></li>
+    </ol>
+    <p class="note">Toutes les valeurs sont dans le fichier des paramètres (écran « Les réglages », bouton d'export) ; les scripts Python et les tableaux intermédiaires sont dans le dossier déposé.</p>
     <h2>Les limites</h2>
     <ul>
       <li>Ce sont des moyennes par province : des écoles peuvent rester surchargées dans une province « correcte ». Le même calcul peut se faire école par école avec les données internes du ministère.</li>
@@ -829,9 +867,11 @@ function ecrireMethode() {
     <h2>Vérifications</h2>
     <p>Les totaux des provinces retombent sur les totaux nationaux publiés par la DGESS (par exemple 13 558 écoles en 2023-24). Le moteur de l'application redonne exactement les résultats des calculs faits en Python (0 écart sur les priorités ; moins de 0,03 % sur la courbe de rendement).</p>
     <h2>Les enseignants sont-ils affectés selon les élèves ?</h2>
-    <p>C'est l'indicateur de cohérence du diagnostic national (RESEN) : la part de l'affectation des enseignants qui ne s'explique pas par le nombre d'élèves. Le RESEN le calcule école par école (29 % en 2013-14) ; faute de données publiques par école, nous le calculons province par province, où les écarts entre écoles se compensent : 9 % en 2017-18, 5 % en 2024-25. Le plan le ramène à environ 2 %, et surtout resserre les extrêmes : en 2025-26, le pire ratio passe de 115 à 62 élèves par maître, et l'écart-type entre provinces de 14 à 7,5.</p>
+    <p>C'est l'indicateur de cohérence du diagnostic national (RESEN) : la part de l'affectation des enseignants qui ne s'explique pas par le nombre d'élèves. Le RESEN le calcule école par école (29 % en 2013-14) ; faute de données publiques par école, nous le calculons province par province, où les écarts entre écoles se compensent : 9 % en 2017-18, 5 % en 2024-25. Le plan le ramène à environ 2 %, et surtout resserre les extrêmes : en 2025-26, le pire ratio passe de 125 (sans action) à 62 élèves par maître, et l'écart-type entre provinces de 21 à 7,4.</p>
     <h2>Les prévisions ont-elles été testées ?</h2>
-    <p>Oui, en se plaçant dans le passé : on prévoit une année avec la méthode de l'outil, puis on compare avec ce que l'annuaire a compté. En année calme, l'écart est faible : de 2023-24 à 2024-25, −5 % pour le pays, 8,5 % en moyenne par province. En pleine crise, il est fort : +21 % pour 2022-23, l'année des fermetures massives, que la méthode ne peut pas prévoir. Depuis 2023, la méthode sous-estime les élèves (−5 à −11 %), car des écoles rouvrent. C'est pourquoi l'outil propose deux scénarios de sécurité : « la situation actuelle se prolonge » donne le bas de la fourchette, « retour à la normale » le haut.</p>
+    <p>Oui. On se place dans le passé, on prévoit une année avec la formule de l'outil, puis on compare avec ce que l'annuaire a compté. Le coefficient k a été calé sur 2022-23 → 2023-24 seulement : <b>l'année 2024-25 ne lui a pas servi, c'est la vraie épreuve.</b></p>
+    ${tableauTest()}
+    <p>Avec le rattrapage, l'outil prévoit les élèves de 2024-25 à <b>0,2 % près</b> pour le pays, contre 5 % avec la population seule. Quelques provinces frontalières restent mal prévues (Tapoa, Kompienga, Sourou, Yagha) : elles dépendent d'événements de sécurité qu'aucune formule ne prévoit. Pendant les fermetures massives (2022-23), aucune méthode ne pouvait prévoir la chute. <b>Dès que l'annuaire 2025-26 paraîtra, on compare la prévision de 2025-26 à la réalité, on recale k</b> (15_test_retrospectif.py) et on relance le plan.</p>
     <h2>Les sources</h2>
     <ul>${etat.donnees.sources.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>`;
 }

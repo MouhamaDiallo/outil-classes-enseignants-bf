@@ -418,3 +418,8 @@ a.lien-prov::after { content: " ↗"; font-size: .8em; text-decoration: none; di
 .nom-reglage { font-size: .8rem; font-weight: 700; color: var(--texte-2); text-align: right; }
 .nom-reglage::after { content: " :"; }
 .ligne-reglage .affichage button { min-width: 5.2rem; }
+/* formules de la méthode */
+.formules li { margin-bottom: .7rem; }
+.formules code { background: var(--ciel); padding: .05rem .3rem; border-radius: 3px; font-size: .92em; white-space: normal; }
+.ligne-forte td { font-weight: 700; background: color-mix(in srgb, var(--stable) 14%, transparent); }
+td.nombre { text-align: right; white-space: nowrap; }

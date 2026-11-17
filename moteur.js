@@ -77,21 +77,26 @@ export function disponibilite(q) {
   return { classes: o.classes - manque, disponibles: Math.max(0, o.sans_classe - classesSansMaitre) };
 }
 
-// Scénario « retour à la normale » (même règle que retour() dans analyse/10_optimisation.py) : à partir
-// de l'année de début, une part des écoles publiques disparues depuis 2018-19 rouvre chaque année, avec
-// ses élèves et ses salles. Renvoie { eleves, salles } en plus pour l'année d'indice j.
-export function retour(p, q, j, j0) {
-  const sc = p.securite ?? {};
-  if (sc.scenario !== "retour" || j0 < 0 || j < j0) return { eleves: 0, salles: 0 };
-  const h0 = q.historique["2018-2019"], h1 = q.historique["2024-2025"];
-  if (!h0 || !h1 || !h0.ecoles) return { eleves: 0, salles: 0 };
-  const fermees = Math.max(0, h0.ecoles - h1.ecoles);
-  if (!fermees) return { eleves: 0, salles: 0 };
-  const rouvertes = fermees * Math.min(1, ((j - j0 + 1) * (sc.rythme_pct ?? 25)) / 100);
-  return {
-    eleves: Math.round((rouvertes * h0.eleves) / h0.ecoles),
-    salles: Math.floor((((rouvertes * h0.salles) / h0.ecoles) * (sc.salles_reutilisables_pct ?? 100)) / 100),
-  };
+// Élèves projetés et salles rendues par les écoles qui rouvrent (même calcul que serie() dans
+// analyse/10_optimisation.py) : T(t) = E(t-1) × croissance des 6-11 ans ; E(t) = T(t) + k(t) × max(0, R(t) - T(t)),
+// R(t) = niveau d'avant la crise. k(t) = rattrapage observé avant « debut », puis 0 (« figee »),
+// le rattrapage observé (« reprise ») ou rythme_pct (« retour »). Renvoie { eleves: {année: x}, salles: {année: n} }.
+export function serieEleves(p, q, annees) {
+  const sc = p.securite, kObs = sc.rattrapage_pct / 100;
+  const kApres = { figee: 0, reprise: kObs, retour: (sc.rythme_pct ?? 40) / 100 }[sc.scenario];
+  const h0 = q.historique["2018-2019"];
+  const sallesParEleve = ((h0.salles / h0.eleves) * (sc.salles_reutilisables_pct ?? 100)) / 100;
+  let e = q.offre_2024.eleves, seul = e;
+  const eleves = {}, salles = {};
+  for (const a of annees) {
+    const k = a < sc.debut ? kObs : kApres, g = q.croissance[a];
+    const t = e * g;
+    e = t + k * Math.max(0, q.reference[a] - t);
+    seul *= g;
+    eleves[a] = e;
+    salles[a] = Math.floor(Math.max(0, e - seul) * sallesParEleve);
+  }
+  return { eleves, salles };
 }
 
 // Leviers de chaque année : réglages par défaut, puis changements reportés d'année en année.
@@ -105,7 +110,7 @@ function leviers(p, annees) {
   return sortie;
 }
 
-// Plan d'ouverture de classes 2025-26 à 2030-31 (programme linéaire, résolu par GLPK).
+// Plan d'ouverture de classes, de 2025-26 à 2030-31 (programme linéaire, résolu par GLPK).
 // options.argent : argent pour les salles par an (FCFA), à la place du budget des paramètres.
 export async function calculerPlan(donnees, p, binaires, glpk, options = {}) {
   const annees = donnees.annees_projection;
@@ -125,8 +130,8 @@ export async function calculerPlan(donnees, p, binaires, glpk, options = {}) {
   const paires = [];
   provs.forEach((q, i) => provs.forEach((r, k) => { if (i !== k && q.region_ancienne === r.region_ancienne) paires.push([i, k]); }));
   const partRed = (p.redeploiement_region_pct ?? 0) / 100;
-  const j0 = p.securite?.scenario === "retour" ? annees.indexOf(p.securite.debut) : -1;
-  const demande = (q, j) => q.demande[annees[j]] + retour(p, q, j, j0).eleves;
+  const series = provs.map((q) => serieEleves(p, q, [...(donnees.annees_sans_plan ?? []), ...annees]));
+  const demande = (i, j) => series[i].eleves[annees[j]];
 
   const obj = [], contraintes = [], bornes = [];
   const n = (k, i, j) => `${k}_${i}_${j}`;
@@ -153,12 +158,12 @@ export async function calculerPlan(donnees, p, binaires, glpk, options = {}) {
       const sal = [{ name: n("o", i, j), coef: 1 }, { name: n("f", i, j), coef: -1 }];
       for (let k = 0; k <= j; k++) sal.push({ name: n("d", i, k), coef: -1 });
       for (let k = Math.max(0, j - vie + 1); k <= j; k++) sal.push({ name: n("e", i, k), coef: -1 });
-      ajout(n("sal", i, j), sal, "<=", libres + retour(p, q, j, j0).salles);
+      ajout(n("sal", i, j), sal, "<=", libres + series[i].salles[a]);
       ajout(n("dfmax", i, j), [{ name: n("f", i, j), coef: 1 }], "<=", s0);
       // une classe ouverte reste ouverte (réglage « classes_definitives »), comme dans Python
       if (p.classes_definitives && j > 0) ajout(n("def", i, j), [{ name: n("o", i, j), coef: 1 }, { name: n("o", i, j - 1), coef: -1 }], ">=", 0);
       ajout(n("exc", i, j), [{ name: n("x", i, j), coef: 1 }, { name: n("o", i, j), coef: plafond }], ">=",
-        demande(q, j) - plafond * g0);
+        demande(i, j) - plafond * g0);
       if (!(L.eta && etaPermis)) fixe0(n("e", i, j));
       if (!L.salle_dur) fixe0(n("d", i, j));
       if (!L.suppleants) fixe0(n("s", i, j));
@@ -196,9 +201,9 @@ export async function calculerPlan(donnees, p, binaires, glpk, options = {}) {
   donnees.provinces.forEach((q, i) => {
     const g0 = disponibilite(q).classes;
     annees.forEach((a, j) => {
-      const plafond = p.plafond_par_annee[a], e = demande(q, j), ouv = val(n("o", i, j));
+      const plafond = p.plafond_par_annee[a], e = demande(i, j), ouv = val(n("o", i, j));
       const eta = val(n("e", i, j)), dur = val(n("d", i, j));
-      plan.push({ annee: a, province: q.nom, region: q.region_ancienne, eleves: e, plafond,
+      plan.push({ annee: a, province: q.nom, region: q.region_ancienne, eleves: Math.round(e), plafond,
         suppleants: val(n("s", i, j)), recrues: val(n("r", i, j)), eta, salles_dur: dur,
         redeployes_recus: flux.filter((f) => f.annee === a && f.vers === q.nom).reduce((t, f) => t + f.enseignants, 0),
         redeployes_envoyes: flux.filter((f) => f.annee === a && f.de === q.nom).reduce((t, f) => t + f.enseignants, 0),

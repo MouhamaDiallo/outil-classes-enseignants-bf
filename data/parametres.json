@@ -158,11 +158,12 @@
   "redeploiement_region_pct": 100,
   "explication_redeploiement": "Part maximale, chaque année, des enseignants sans classe disponibles (après les besoins de la province et la réserve) qu'une province peut envoyer dans une autre province de la même ancienne région. Par défaut 100 % : pas de limite arbitraire (règle de non-dégradation décidée le 13/11 et confirmée le 15/11). À baisser si le ministère connaît la capacité réelle de son administration à déplacer des enseignants.",
   "securite": {
-    "scenario": "actuelle",
+    "scenario": "reprise",
+    "rattrapage_pct": 19,
     "debut": "2027-2028",
-    "rythme_pct": 25,
+    "rythme_pct": 40,
     "salles_reutilisables_pct": 100,
-    "explication": "« actuelle » : la situation de 2024-25 se prolonge. « retour » : à partir de « debut », rythme_pct % des écoles publiques disparues depuis 2018-19 (par province) rouvrent chaque année, avec leurs élèves (élèves par école de 2018-19) et leurs salles (salles par école de 2018-19, dont salles_reutilisables_pct % encore utilisables). Hypothèses arbitraires, réglables, voir HYPOTHESES.md."
+    "explication": "Chaque année, une province rattrape une part k de l'écart entre ses élèves et son niveau d'avant la crise (2018-19, à la population de l'année) : E(t) = T(t) + k × max(0, R(t) − T(t)). « reprise » : k = rattrapage_pct (19 %, observé : calé sur 2022-23 → 2023-24, vérifié sur 2024-25 à −0,2 % près, voir 15_test_retrospectif.py). « figee » : plus aucune réouverture à partir de « debut » (k = 0). « retour » : k = rythme_pct à partir de « debut ». Avant « debut », k observé. Les élèves rattrapés reviennent avec les salles de leurs écoles (salles par élève de 2018-19, dont salles_reutilisables_pct % utilisables)."
   },
   "classes_definitives": true,
   "explication_classes_definitives": "Une classe ouverte reste ouverte jusqu'en 2030-31 : pas de fermeture en cours de plan (décision de l'équipe, 15/11). Sans cette règle, le plan ouvrait des classes en double flux qui fermaient en 2029-30 (1 420 classes).",
@@ -201,5 +202,7 @@
   },
   "taux_respect_affectation_pct": 100,
   "valeur_pedagogique_double_flux_pct": 50,
-  "explication_optimisation": "Le modèle cherche, chaque année et dans chaque province, combien de nouvelles classes ouvrir et avec quoi (suppléant ou recrue pour l'enseignant ; ETA, salle en dur ou double flux pour la salle) afin de réduire au maximum le nombre d'élèves en surnombre (au-delà du plafond de l'année), dans la limite des deux budgets. Un groupe en double flux ne compte qu'à valeur_pedagogique_double_flux_pct % (heures de cours en moins). Les recrues ne suivent la règle qu'à taux_respect_affectation_pct %."
+  "explication_optimisation": "Le modèle cherche, chaque année et dans chaque province, combien de nouvelles classes ouvrir et avec quoi (suppléant ou recrue pour l'enseignant ; ETA, salle en dur ou double flux pour la salle) afin de réduire au maximum le nombre d'élèves en surnombre (au-delà du plafond de l'année), dans la limite des deux budgets. Un groupe en double flux ne compte qu'à valeur_pedagogique_double_flux_pct % (heures de cours en moins). Les recrues ne suivent la règle qu'à taux_respect_affectation_pct %.",
+  "debut_plan": "2025-2026",
+  "explication_debut_plan": "Le plan commence à la première année après les données (2024-25). Quand l'annuaire 2025-26 sera publié, on compare la prévision à la réalité, on recale le rattrapage (15_test_retrospectif.py) et on relance la chaîne."
 }
