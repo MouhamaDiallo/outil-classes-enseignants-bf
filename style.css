@@ -429,3 +429,7 @@ td.nombre { text-align: right; white-space: nowrap; }
 .commandes select { width: 100%; }
 .frise-defile { max-width: 100%; overflow-x: auto; }
 @media (max-width: 600px) { .grille-accueil .resume-plan li { padding-left: 0; text-indent: 0; } .grille-accueil .resume-plan li b.etiquette { display: block; width: auto; } }
+/* « comment c'est calculé » sous une tuile, replié */
+.aide-tuile { margin-top: .4rem; font-size: .8rem; color: var(--texte-2); }
+.aide-tuile summary { cursor: pointer; color: var(--accent); font-weight: 700; }
+.aide-tuile p { margin: .3rem 0 0; }

@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=54";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=56";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
@@ -450,7 +450,6 @@ function installerSimulateur() {
   for (const id of ["plafond-1", "plafond-2", "plafond-3"]) $(`#${id}`).innerHTML = PLAFONDS.map((x) => `<option>${x}</option>`).join("");
   $("#df-fin").innerHTML = ap.map((a) => `<option value="${a}">${a}</option>`).join("");
   $("#securite-debut").innerHTML = ap.map((a) => `<option value="${a}">${a}</option>`).join("");
-  $("#plan-annee").innerHTML = ap.map((a) => `<option>${a}</option>`).join("");
   $("#reco-annee").innerHTML = ap.map((a) => `<option>${a}</option>`).join("");
   $("#reco-annee").addEventListener("change", dessinerRecommandations);
   lireScenarioDansCommandes();
@@ -460,7 +459,6 @@ function installerSimulateur() {
     clearTimeout(minuterie);
     minuterie = setTimeout(() => { ecrireCommandesDansScenario(); recalculerPlan(); }, 450);
   });
-  $("#plan-annee").addEventListener("change", dessinerPlan);
   $("#bouton-courbe").addEventListener("click", tracerCourbe);
   $("#export-plan").addEventListener("click", exporterPlan);
 }
@@ -539,13 +537,24 @@ function dessinerPlan() {
   if (!etat.plan.length) return;
   const s = synthese(etat.plan), ap = etat.donnees.annees_projection;
   const tot = (k) => s.reduce((x, l) => x + l[k], 0);
-  const premiere = s[0], derniere = s.at(-1);
+  const derniere = s.at(-1);
+  // quatre tuiles sur les 6 ans (le résultat d'une année est dans « Ce que le plan recommande ») ;
+  // chaque tuile a son « comment c'est calculé », replié
+  const anneeRecrue = s.find((l) => l.recrues > 0)?.annee;
+  const recrues = tot("recrues");
+  const plafonds = [...new Set(ap.map((a) => etat.p.plafond_par_annee[a]))].join(", puis ");
   $("#tuiles-plan").innerHTML = [
-    ["Élèves en surnombre la 1re année", fmt(premiere.surnombre_avec_plan), `${fmt(premiere.surnombre_sans_action)} sans action`],
-    ["Élèves en surnombre en " + derniere.annee, fmt(derniere.surnombre_avec_plan), `${fmt(derniere.surnombre_sans_action)} sans action`],
-    ["Baisse du surnombre sur 6 ans", `${fmt(100 - (100 * tot("surnombre_avec_plan")) / Math.max(1, tot("surnombre_sans_action")))} %`, `additionné sur les 6 années`],
-    ["Dépense pour les salles, 6 ans", `${fmt(tot("cout_salles_fcfa") / 1e9, 1)} Md FCFA`, `${fmt(tot("eta"))} ETA, ${fmt(tot("salles_dur"))} salles en dur`],
-  ].map(([l, v, e]) => `<div class="tuile"><div class="libelle">${l}</div><div class="valeur">${v}</div><div class="ecart">${e}</div></div>`).join("");
+    ["Recrues nécessaires sur 6 ans", fmt(recrues),
+      !recrues ? "aucune : les enseignants déjà payés suffisent" : anneeRecrue === ap[0] ? `dès ${ap[0]}` : `aucune avant ${anneeRecrue}`,
+      "Nouveaux enseignants à embaucher pour ouvrir les classes du plan, une fois mis devant une classe les enseignants déjà payés et sans classe (de la province, puis de la région). Les remplacements des départs (retraites, démissions) sont en plus."],
+    [`Élèves au-dessus du plafond en ${derniere.annee}, tout le pays`, fmt(derniere.surnombre_avec_plan), `${fmt(derniere.surnombre_sans_action)} si on ne fait rien`,
+      `Calcul par province : élèves − plafond × classes. Exemple : 10 000 élèves et 160 classes avec un plafond de 60 : la province peut accueillir 9 600 élèves, donc 400 sont au-dessus. On additionne les 45 provinces. Plafond : ${plafonds} élèves par classe.`],
+    ["Baisse sur 6 ans des élèves au-dessus du plafond", `${fmt(100 - (100 * tot("surnombre_avec_plan")) / Math.max(1, tot("surnombre_sans_action")))} %`, "par rapport à « ne rien faire »",
+      `On additionne les élèves au-dessus du plafond de chaque année : ${fmt(tot("surnombre_avec_plan"))} avec le plan, contre ${fmt(tot("surnombre_sans_action"))} sans action.`],
+    ["Argent pour les salles sur 6 ans", `${fmt(tot("cout_salles_fcfa") / 1e9, 1)} Md FCFA`, `${fmt(tot("eta"))} ETA, ${fmt(tot("salles_dur"))} salles en dur`,
+      `Abri temporaire (ETA) : ${fmt(etat.p.couts.eta_fcfa / 1e6, 1)} M FCFA, il dure 3 ans ; salle en dur : ${fmt(etat.p.couts.salle_dur_fcfa / 1e6, 1)} M FCFA. Les enseignants déjà payés ne coûtent rien de plus.`],
+  ].map(([l, v, e, aide]) => `<div class="tuile"><div class="libelle">${l}</div><div class="valeur">${v}</div><div class="ecart">${e}</div>
+    <details class="aide-tuile"><summary>Comment c'est calculé ?</summary><p>${aide}</p></details></div>`).join("");
 
   graphe("g-surnombre", { type: "bar", data: { labels: ap, datasets: [
     { label: "Sans action", data: s.map((l) => l.surnombre_sans_action), backgroundColor: css("--sans-action"), borderRadius: 4, maxBarThickness: 28 },
@@ -566,12 +575,6 @@ function dessinerPlan() {
   const lignes = [["Année", "Élèves", "Plafond", "Enseignants sans classe mis devant une classe", "dont venus d'une autre province", "Recrues", "ETA", "Salles en dur", "Classes en double flux", "Provinces au-dessus du plafond", "Dépense (Md FCFA)"]];
   s.forEach((l) => lignes.push([l.annee, fmt(l.eleves), etat.p.plafond_par_annee[l.annee], fmt(l.suppleants + l.redeployes_recus), fmt(l.redeployes_recus), fmt(l.recrues), fmt(l.eta), fmt(l.salles_dur), fmt(l.double_flux), `${l.provinces_avec_plan} (${l.provinces_sans_action} sans action)`, fmt(l.cout_salles_fcfa / 1e9, 2)]));
   $("#t-moyens").innerHTML = tableauHtml(lignes);
-
-  const a = $("#plan-annee").value || ap[0];
-  const lp = etat.plan.filter((l) => l.annee === a).sort((x, y) => y.surnombre_sans_action - x.surnombre_sans_action);
-  const t = [["Province", "Région (ancienne)", "Élèves", "Élèves par classe sans action", "avec le plan", "Classes en plus", "Enseignants de la province", "Venus de la région", "Recrues de l'année", "ETA", "Salles en dur", "Double flux"]];
-  lp.forEach((l) => t.push([titre(l.province), titre(l.region), fmt(l.eleves), fmt(l.eleves_par_classe_sans_action, 1), fmt(l.eleves_par_classe_avec_plan, 1), fmt(l.classes_supplementaires), fmt(l.suppleants), fmt(l.redeployes_recus), fmt(l.recrues), fmt(l.eta), fmt(l.salles_dur), fmt(l.double_flux)]));
-  $("#t-plan").innerHTML = tableauHtml(t);
 }
 
 // Recommandations en phrases, pour une année : d'abord le résumé national, puis chaque province qui agit.
@@ -604,7 +607,8 @@ function phraseProvince(l, a, avecSecurite = true) {
   const vers = flux.filter((f) => f.de === l.province).map((f) => `${lienProv(f.vers)} ${fmt(f.enseignants)}`);
   const morceaux = [];
   if (l.classes_supplementaires > 0) {
-    morceaux.push(`${nb(l.classes_supplementaires, "classe")} en plus${j > 0 ? ` (${nouvelles >= 0 ? "+" : ""}${fmt(nouvelles)} cette année)` : ""}`);
+    morceaux.push(`${nb(l.classes_supplementaires, "classe")} en plus${j > 0 ? ` (${nouvelles >= 0 ? "+" : ""}${fmt(nouvelles)} cette année)` : ""}`
+      + `, de ${fmt(l.eleves_par_classe_sans_action)} à ${fmt(l.eleves_par_classe_avec_plan)} élèves par classe`);
     if (nouvelles < 0 && (avant?.double_flux ?? 0) > l.double_flux)
       morceaux.push(`<b>attention : ${fmt(-nouvelles)} classes ferment</b> à la fin du double flux, faute de salles pour les remplacer ; construire ces salles avant ${a} évite ce recul`);
     const ens = [];
