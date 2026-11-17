@@ -317,12 +317,12 @@ function dessinerListePriorites() {
   const n = (c) => lignes.filter((x) => x.priorite === c).length;
   $("#legende-carte").innerHTML = CLASSES.map((c) =>
     `<span title="${EXPLICATIONS[c]}"><i class="pastille c-${c}">${LETTRES[c]}</i>${LIBELLES[c]} <b>(${n(c)})</b></span>`).join("")
-    + `<span><i class="pastille contour-officiel"></i>liste officielle des 19 provinces</span>`;
+    + `<span><i class="pastille contour-officiel"></i>pointillé = province de la liste officielle « à fort défi sécuritaire » (19 provinces, 2025)</span>`;
   const liste = new Set(etat.donnees.provinces.filter((p) => p.zone_officielle).map((p) => p.nom));
   const besoin = new Set(lignes.filter((x) => ["urgence", "surcharge", "vigilance"].includes(x.priorite)).map((x) => x.province));
   const oubliees = [...besoin].filter((x) => !liste.has(x)).map((x) => lienProv(x));
   const sansBesoin = [...liste].filter((x) => !besoin.has(x)).map((x) => lienProv(x));
-  $("#comparaison-officielle").innerHTML = `<b>Par rapport à la liste officielle :</b> besoin réel hors liste : ${oubliees.join(", ") || "aucune"} ; dans la liste sans besoin fort en ${a} : ${sansBesoin.join(", ") || "aucune"}.`;
+  $("#comparaison-officielle").innerHTML = `<b>Besoin réel, mais hors de la liste officielle</b> (couleur sans pointillé) : ${oubliees.join(", ") || "aucune"}. <b>Dans la liste, sans besoin fort en ${a}</b> (pointillé sur beige ou vert) : ${sansBesoin.join(", ") || "aucune"}.`;
 }
 
 function optionsGraphe(axeY) {
