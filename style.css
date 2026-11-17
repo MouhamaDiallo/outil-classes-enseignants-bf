@@ -287,3 +287,19 @@ a.lien-prov:hover { text-decoration-thickness: 2px; }
   .fiche .tableau th, .fiche .tableau td { padding: .2rem .25rem; white-space: normal; }
   .etape-suivante, .but-ecran { display: none !important; }
 }
+/* accueil : la carte d'abord, le plan de la rentrée à côté */
+.grille-accueil { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.grille-accueil .carte-bloc, .grille-accueil .a-faire { margin-bottom: 1.25rem; }
+.grille-accueil .a-faire h2 { margin-top: 0; }
+.grille-accueil .resume-plan li { padding-left: 6.5rem; text-indent: -6.5rem; }
+.grille-accueil .resume-plan li b.etiquette { width: 6.5rem; }
+@media (max-width: 900px) { .grille-accueil { grid-template-columns: minmax(0, 1fr); } }
+/* téléphone : réglages d'affichage compacts, pour voir la carte plus vite */
+@media (max-width: 760px) {
+  .reglages-affichage { flex-direction: row; flex-wrap: wrap; gap: .4rem; }
+  .reglages-affichage > div { flex-direction: row; }
+  .reglages-affichage .titre-groupe { display: none; }
+  .affichage button { font-size: .78rem; padding: .3rem .5rem; }
+  .entete { gap: .6rem; padding-bottom: .3rem; }
+  .sous-titre { font-size: .9rem; }
+}

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
   <header class="entete">
@@ -44,17 +44,8 @@
     <p id="chargement" class="chargement" role="status">Chargement des données et des bibliothèques… (quelques secondes si la connexion est lente)</p>
     <!-- 1. La situation actuelle -->
     <section id="ecran-situation" class="ecran actif" role="tabpanel">
-      <div class="but-ecran"><span class="numero">1</span><div><p><b>Le constat, et ce qu'il faut faire à la prochaine rentrée.</b></p><p class="quoi">Lisez d'abord « Ce qu'il faut faire ». Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
-      <div class="tuiles" id="tuiles"></div>
-      <section class="bloc a-faire" id="a-faire">
-        <h2>Ce qu'il faut faire</h2>
-        <div id="a-faire-resume" class="a-faire-resume">Calcul du plan…</div>
-        <h3>Ce qu'on observe aujourd'hui (2024-2025, avant le plan)</h3>
-        <ul id="alertes" class="liste-reco"></ul>
-        <p><a href="#simulateur" class="lien-plan">Voir le plan détaillé, province par province et année par année →</a></p>
-        <div class="etape-suivante"><a href="#simulateur">Étape suivante : Ajuster le plan dans le simulateur →</a></div>
-    </section>
-      <div class="grille-2">
+      <div class="but-ecran"><span class="numero">1</span><div><p><b>Où agir, et quoi faire à la prochaine rentrée.</b></p><p class="quoi">La carte montre la priorité de chaque province ; le bloc « Ce qu'il faut faire » donne le plan de la rentrée. Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
+      <div class="grille-accueil">
         <figure class="carte-bloc">
           <figcaption>
             <span class="titre-fig">Priorité de chaque province <span class="note">(cliquez pour ouvrir sa fiche)</span></span>
@@ -63,14 +54,27 @@
           <div id="carte" class="carte" role="img" aria-label="Carte des 45 provinces colorées par classe de priorité"></div>
           <div class="legende" id="legende-carte"></div>
         </figure>
+        <section class="bloc a-faire" id="a-faire">
+          <h2>Ce qu'il faut faire</h2>
+          <div id="a-faire-resume" class="a-faire-resume">Calcul du plan…</div>
+          <p><a href="#simulateur" class="lien-plan">Voir le plan détaillé, province par province et année par année →</a></p>
+        </section>
+      </div>
+      <div class="tuiles" id="tuiles"></div>
+      <section class="bloc alertes-bloc">
+        <h3>Ce qu'on observe aujourd'hui (2024-2025, avant le plan)</h3>
+        <ul id="alertes" class="liste-reco"></ul>
+      </section>
+      <div class="grille-2">
         <figure class="graphe-bloc">
           <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
           <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
           <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le bloc « Classes, enseignants et salles »).</p>
         </figure>
+        <div id="liste-priorites" class="bloc"></div>
       </div>
       <div id="bilan-classes" class="bloc"></div>
-      <div id="liste-priorites" class="bloc"></div>
+      <div class="etape-suivante"><a href="#simulateur">Étape suivante : Ajuster le plan dans le simulateur →</a></div>
     </section>
 
     <!-- 2. La frise -->
@@ -252,6 +256,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=28"></script>
+  <script type="module" src="app.js?v=29"></script>
 </body>
 </html>
