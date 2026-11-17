@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=58";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=59";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
@@ -298,7 +298,7 @@ function dessinerBilanClasses() {
   const sansClasse = somme(a, "sans_classe"), dirSansClasse = n.enseignants_total - n.maitres - sansClasse;
   const dirEnClasse = n.directeurs - dirSansClasse;
   const ligne = (libelle, valeur, detail = "") => `<tr><td class="gauche">${libelle}</td><td>${valeur}</td><td class="gauche note">${detail}</td></tr>`;
-  $("#bilan-classes").innerHTML = `<h3>Classes, enseignants et salles en ${a}</h3>
+  $("#bilan-classes").innerHTML = `
     <p class="note">Une <b>classe</b> est un groupe d'élèves (« groupe pédagogique ») ; une <b>salle</b> est un local, en dur ou non (banco, paillote). Les écarts se comptent province par province : un surplus dans une province ne comble pas un manque dans une autre.</p>
     <div class="tableau-defile"><table class="tableau">
       <tr><th class="gauche">Les classes</th><th></th><th></th></tr>
@@ -427,7 +427,7 @@ function dessinerFrise() {
   for (const r of regions) {
     html += `<tr><th class="region" colspan="${annees.length + 1}">${titre(r)}</th></tr>`;
     for (const prov of etat.donnees.provinces.filter((p) => p.region_ancienne === r)) {
-      html += `<tr><th>${titre(prov.nom)}</th>`;
+      html += `<tr><th>${lienProv(prov.nom)}</th>`;
       for (const a of annees) {
         const l = etat.parCle[`${a}|${prov.nom}`];
         if (!l) { html += `<td class="vide" data-info="${esc(titre(prov.nom))}, ${a} : pas de données">–</td>`; continue; }

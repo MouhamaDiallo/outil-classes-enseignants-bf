@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=58">
+  <link rel="stylesheet" href="style.css?v=59">
 </head>
 <body>
   <header class="entete">
@@ -82,10 +82,10 @@
 
     <!-- 2. La frise -->
     <section id="ecran-frise" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">4</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018, et le détail des enseignants, classes et salles.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule. Plus bas : l'évolution des enseignants et le bilan classes, enseignants et salles.</p></div></div>
+      <div class="but-ecran"><span class="numero">4</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018, et le détail des enseignants, classes et salles.</b></p><p class="quoi">Une ligne qui passe au rouge montre une province qui bascule. Plus bas : l'évolution des enseignants et le bilan classes, enseignants et salles.</p></div></div>
       <div class="filtres">
         <label>Afficher <select id="frise-variable"></select></label>
-        <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail.</span>
+        <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail ; un clic sur un nom ouvre la fiche de la province.</span>
       </div>
       <div class="legende" id="legende-frise"></div>
       <div class="frise-defile"><table id="frise" class="frise"></table></div>
@@ -96,7 +96,7 @@
           <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le tableau ci-dessous).</p>
         </figure>
       <div class="bloc">
-        <div class="filtres"><label>Année <select id="bilan-annee"></select></label></div>
+        <div class="filtres"><h3>Classes, enseignants et salles</h3><label>Année <select id="bilan-annee"></select></label></div>
         <div id="bilan-classes"></div>
       </div>
       <div class="etape-suivante"><a href="#reglages">Étape suivante : Ajuster les règles de priorité →</a></div>
@@ -264,6 +264,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=58"></script>
+  <script type="module" src="app.js?v=59"></script>
 </body>
 </html>
