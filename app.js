@@ -152,13 +152,17 @@ const surnombre = (a) => etat.donnees.provinces.reduce((t, q) => {
 function dessinerTuiles() {
   const d = etat.donnees, a0 = d.annees_historique[0], a1 = d.annees_historique.at(-1);
   const n0 = d.national[a0], n1 = d.national[a1];
-  const var_ = (x, y) => `${y >= x ? "+" : ""}${fmt((100 * (y - x)) / x)} % depuis ${a0}`;
-  $("#tuiles").innerHTML = [
-    ["Enseignants du primaire public", fmt(n1.enseignants_total), var_(n0.enseignants_total, n1.enseignants_total)],
-    ["Enseignants devant une classe", fmt(n1.maitres), var_(n0.maitres, n1.maitres)],
-    ["Enseignants sans classe (hors directeurs)", fmt(somme(a1, "sans_classe")), `${fmt(somme(a0, "sans_classe"))} en ${a0}`],
-    [`Élèves au-dessus du plafond (${etat.p.plafond_par_annee[a1]} par classe) en ${a1}`, fmt(surnombre(a1)), `${fmt(surnombre(a0))} en ${a0}`],
-  ].map(([l, v, e]) => `<div class="tuile"><div class="libelle">${l}</div><div class="valeur">${v}</div><div class="ecart">${e}</div></div>`).join("");
+  // même format pour les 4 tuiles : pourcentage et écart en nombre depuis la première année
+  const signe = (v) => (v > 0 ? "+" : v < 0 ? "−" : "");
+  const var_ = (x, y) => `${signe(y - x)}${fmt(Math.abs((100 * (y - x)) / x))} % (${signe(y - x)}${fmt(Math.abs(y - x))}) depuis ${a0}`;
+  const tuiles = [
+    ["Enseignants du primaire public", n0.enseignants_total, n1.enseignants_total],
+    ["Enseignants devant une classe", n0.maitres, n1.maitres],
+    ["Enseignants sans classe (hors directeurs)", somme(a0, "sans_classe"), somme(a1, "sans_classe")],
+    [`Élèves au-dessus du plafond (${etat.p.plafond_par_annee[a1]} par classe)`, surnombre(a0), surnombre(a1)],
+  ];
+  $("#tuiles").innerHTML = tuiles.map(([l, x, y]) =>
+    `<div class="tuile"><div class="libelle">${l}, ${a1}</div><div class="valeur">${fmt(y)}</div><div class="ecart">${var_(x, y)}</div></div>`).join("");
 }
 
 // « Ce qu'il faut faire » : les alertes de 2024-25 (où et pourquoi), puis le résumé du plan de la
