@@ -368,3 +368,47 @@ details.autres .puces { margin-top: .35rem; }
 .pastille.contour-officiel { background: transparent; border: 2px dashed var(--texte); }
 #comparaison-officielle { margin-top: .5rem; }
 .titre-section { margin: 2rem 0 1rem; font-size: 1.2rem; }
+/* une province cliquable l'annonce (↗) ; la fiche a un bouton pour revenir */
+a.lien-prov::after { content: " ↗"; font-size: .8em; text-decoration: none; display: inline-block; margin-left: .05em; }
+.retour-fiche { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; background: var(--ciel); border: 2px solid var(--accent); border-radius: 4px; padding: .6rem .8rem; margin: 0 0 1rem; position: sticky; top: .3rem; z-index: 5; }
+.retour-fiche[hidden] { display: none; }
+@media print { .retour-fiche { display: none !important; } }
+/* en-tête compact : titre et une ligne ; les onglets et le bouton « Affichage » sur une même ligne */
+.entete { display: block; padding: 1rem 16px .4rem; }
+.entete h1 { margin: 0; }
+.entete .sous-titre { margin: .25rem 0 0; font-size: .95rem; }
+.barre-onglets { display: flex; align-items: flex-end; gap: .5rem; max-width: 1280px; margin: 0 auto; padding: 0 16px; border-bottom: 2px solid var(--bord); }
+.barre-onglets .onglets { flex: 1 1 auto; min-width: 0; padding: 0; margin: 0; max-width: none; border-bottom: 0; }
+.menu-affichage { position: relative; flex: none; margin-bottom: .35rem; }
+.menu-affichage summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .35rem; font-weight: 700; font-size: .88rem;
+  color: var(--accent); border: 2px solid var(--accent); border-radius: 4px; padding: .3rem .6rem; background: var(--surface); white-space: nowrap; }
+.menu-affichage summary::-webkit-details-marker { display: none; }
+.menu-affichage[open] summary { background: var(--accent); color: var(--sur-accent); }
+.etat-affichage { font-weight: 400; font-size: .8rem; opacity: .85; }
+.panneau-affichage { position: absolute; right: 0; top: calc(100% + .4rem); z-index: 1100; width: min(360px, 90vw); background: var(--surface);
+  border: 2px solid var(--bord); border-radius: 4px; box-shadow: 4px 4px 0 var(--ocre); padding: .8rem; display: grid; gap: .7rem; }
+.groupe-affichage { display: grid; gap: .3rem; }
+.groupe-affichage .titre-groupe { display: block !important; font-size: .8rem; font-weight: 700; color: var(--texte-2); }
+.panneau-affichage .affichage { display: flex; flex-wrap: wrap; }
+.panneau-affichage .note { margin: 0; }
+@media (max-width: 760px) {
+  .entete h1 { font-size: 1.3rem; }
+  .entete .sous-titre { font-size: .85rem; }
+  .etat-affichage { display: none; }
+  .barre-onglets { align-items: center; }
+}
+@media print { .barre-onglets { display: none !important; } }
+/* réglages d'affichage visibles dans la barre des onglets */
+.reglages-barre { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; margin-bottom: .35rem; }
+.reglages-barre .affichage button { font-size: .8rem; padding: .28rem .55rem; }
+.reglages-barre select { font-size: .8rem; padding: .25rem .35rem; max-width: 15rem; }
+.reglages-barre select[hidden] { display: none; }
+@media (max-width: 1100px) { .barre-onglets { flex-wrap: wrap; } .reglages-barre { width: 100%; justify-content: flex-start; padding: .35rem 0; } }
+.reglages-barre select { max-width: 9.5rem; }
+.onglets { scrollbar-width: none; }
+.onglets::-webkit-scrollbar { display: none; }
+@media (max-width: 1300px) { .barre-onglets { flex-wrap: wrap; } .reglages-barre { width: 100%; justify-content: flex-start; padding: .2rem 0 .35rem; order: -1; } }
+/* réglages d'affichage sur la ligne du titre : les onglets gardent toute la largeur */
+.ligne-titre { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.ligne-titre .reglages-barre { margin: 0; width: auto !important; padding: 0 !important; order: 0 !important; }
+.barre-onglets { flex-wrap: nowrap !important; }

@@ -28,7 +28,8 @@ const ACCENTS = { SENO: "Séno", PASSORE: "Passoré", BOULKIEMDE: "Boulkiemdé",
 const titreBrut = (s) => String(s).toLowerCase().replace(/[a-zàâçéèêëîïôûùüÿ]+/g, (m, i) => (i > 0 && PETITS.has(m) ? m : m.charAt(0).toUpperCase() + m.slice(1)));
 const titre = (s) => ACCENTS[String(s).toUpperCase()] ?? titreBrut(s);
 // nom de province cliquable : ouvre sa fiche
-const lienProv = (nom, texte = titre(nom)) => `<a class="lien-prov" href="#fiche-${encodeURIComponent(nom)}">${texte}</a>`;
+const lienProv = (nom, texte = titre(nom)) =>
+  `<a class="lien-prov" href="#fiche-${encodeURIComponent(nom)}" title="Ouvre la fiche de ${titre(nom)} ; le bouton « Revenir » vous ramène ici">${texte}</a>`;
 
 // ---------- démarrage ----------
 async function demarrer() {
@@ -82,23 +83,45 @@ function installerAffichage() {
     racine.dataset.theme = fond === "noir" ? "dark" : "light";
     if (couleurs === "standard") delete racine.dataset.palette; else racine.dataset.palette = couleurs;
     document.querySelectorAll("[data-fond]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.fond === fond));
-    document.querySelectorAll("[data-couleurs]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.couleurs === couleurs));
+    // deux boutons visibles : « Mode standard » et « Mode daltonien » ; le type de daltonisme se choisit à côté
+    document.querySelectorAll("[data-couleurs]").forEach((b) =>
+      b.setAttribute("aria-pressed", b.dataset.couleurs === "standard" ? couleurs === "standard" : couleurs !== "standard"));
+    $("#type-daltonisme").hidden = couleurs === "standard";
+    if (couleurs !== "standard") $("#type-daltonisme").value = couleurs;
   };
   appliquer();
   document.querySelectorAll("[data-fond]").forEach((b) => b.addEventListener("click", () => {
     fond = b.dataset.fond; ecrire("outil-classes-fond", fond); appliquer(); toutRedessiner();
   }));
   document.querySelectorAll("[data-couleurs]").forEach((b) => b.addEventListener("click", () => {
-    couleurs = b.dataset.couleurs; ecrire("outil-classes-couleurs", couleurs); appliquer(); toutRedessiner();
+    couleurs = b.dataset.couleurs === "standard" ? "standard" : $("#type-daltonisme").value;
+    ecrire("outil-classes-couleurs", couleurs); appliquer(); toutRedessiner();
   }));
+  $("#type-daltonisme").addEventListener("change", () => {
+    couleurs = $("#type-daltonisme").value; ecrire("outil-classes-couleurs", couleurs); appliquer(); toutRedessiner();
+  });
 }
 
 // Onglets ; l'adresse garde l'écran ouvert (#simulateur, #fiche-LOROUM…) pour partager un lien.
+document.addEventListener("click", (e) => {
+  if (e.target.id === "bouton-retour" && etat.retour) { const r = etat.retour; montrer(r); history.pushState(null, "", `#${r}`); scrollTo(0, 0); }
+});
+
 function installerOnglets() {
   document.querySelectorAll("[data-ecran]").forEach((b) => b.addEventListener("click", () => montrer(b.dataset.ecran)));
   addEventListener("hashchange", lireAdresse);
 }
+const NOMS_ECRANS = { situation: "La situation actuelle", simulateur: "Le simulateur", frise: "La frise",
+  reglages: "Les réglages", fiche: "Fiche province", methode: "Méthode et sources" };
 function montrer(ecran) {
+  const avant = document.querySelector(".ecran:not([hidden])")?.id.replace("ecran-", "");
+  if (ecran === "fiche" && avant && avant !== "fiche") etat.retour = avant;
+  if (ecran !== "fiche") etat.retour = null;
+  const r = $("#retour-fiche");
+  if (r) {
+    r.hidden = !etat.retour;
+    if (etat.retour) r.innerHTML = `<button type="button" class="bouton" id="bouton-retour">← Revenir à « ${NOMS_ECRANS[etat.retour]} »</button><span class="note">Vous avez ouvert cette fiche en cliquant sur une province.</span>`;
+  }
   document.querySelectorAll("[data-ecran]").forEach((x) => x.setAttribute("aria-selected", x.dataset.ecran === ecran));
   document.querySelectorAll(".ecran").forEach((e) => { e.hidden = e.id !== `ecran-${ecran}`; });
   if (!location.hash.startsWith(`#${ecran}`)) history.replaceState(null, "", `#${ecran}`);
@@ -734,10 +757,11 @@ function installerFiche() {
 }
 
 function ouvrirFiche(nom) {
+  // nouvelle entrée d'historique d'abord : le bouton Précédent du navigateur ramène à la page d'origine
+  history.pushState(null, "", `#fiche-${encodeURIComponent(nom)}`);
   $("#fiche-province").value = nom;
   dessinerFiche();
   montrer("fiche");
-  history.replaceState(null, "", `#fiche-${nom}`);
 }
 
 function dessinerFiche() {

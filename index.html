@@ -9,42 +9,48 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=40">
+  <link rel="stylesheet" href="style.css?v=48">
 </head>
 <body>
   <header class="entete">
-    <div>
+    <div class="ligne-titre">
       <h1>Classes et enseignants du primaire public</h1>
-      <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 ? Burkina Faso, 45 provinces (découpage des annuaires DGESS). Données des années scolaires 2017-2018 à 2024-2025.</p>
+    <div class="reglages-barre" aria-label="Affichage">
+        <span class="affichage" role="group" aria-label="Fond">
+          <button type="button" data-fond="blanc" aria-pressed="false">Blanc</button>
+          <button type="button" data-fond="noir" aria-pressed="false">Noir</button>
+        </span>
+        <span class="affichage" role="group" aria-label="Couleurs">
+          <button type="button" data-couleurs="standard" aria-pressed="false">Mode standard</button>
+          <button type="button" data-couleurs="daltonien" aria-pressed="false" title="Couleurs adaptées aux personnes daltoniennes">Mode daltonien</button>
+        </span>
+        <select id="type-daltonisme" aria-label="Type de daltonisme" title="Type de daltonisme">
+          <option value="deuteranopie" title="Rouge-vert, la forme la plus fréquente">Deutéranopie</option>
+          <option value="protanopie" title="Rouge-vert : le rouge paraît sombre">Protanopie</option>
+          <option value="tritanopie" title="Bleu-jaune, rare">Tritanopie</option>
+        </select>
+      </div>
     </div>
-    <div class="reglages-affichage">
-      <div><span class="titre-groupe">Fond</span><span class="affichage" role="group" aria-label="Fond">
-        <button type="button" data-fond="blanc" aria-pressed="false">Blanc</button>
-        <button type="button" data-fond="noir" aria-pressed="false">Noir</button>
-      </span></div>
-      <div><span class="titre-groupe">Couleurs</span><span class="affichage" role="group" aria-label="Couleurs">
-        <button type="button" data-couleurs="standard" aria-pressed="false">Standard</button>
-        <button type="button" data-couleurs="deuteranopie" aria-pressed="false" title="Daltonisme rouge-vert, le plus fréquent (environ 5 hommes sur 100)">Deutéranopie</button>
-        <button type="button" data-couleurs="protanopie" aria-pressed="false" title="Daltonisme rouge-vert : le rouge paraît sombre">Protanopie</button>
-        <button type="button" data-couleurs="tritanopie" aria-pressed="false" title="Daltonisme bleu-jaune, rare">Tritanopie</button>
-      </span></div>
-    </div>
+    <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 · Burkina Faso, 45 provinces (découpage des annuaires DGESS) · données 2017-2018 à 2024-2025</p>
   </header>
 
-  <nav class="onglets" role="tablist" aria-label="Écrans">
-    <button role="tab" aria-selected="true" data-ecran="situation">La situation actuelle</button>
-    <button role="tab" aria-selected="false" data-ecran="simulateur">Le simulateur</button>
-    <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
-    <button role="tab" aria-selected="false" data-ecran="reglages">Les réglages</button>
-    <button role="tab" aria-selected="false" data-ecran="fiche">Fiche province</button>
-    <button role="tab" aria-selected="false" data-ecran="methode">Méthode et sources</button>
-  </nav>
+  <div class="barre-onglets">
+    <nav class="onglets" role="tablist" aria-label="Écrans">
+      <button role="tab" aria-selected="true" data-ecran="situation">La situation actuelle</button>
+      <button role="tab" aria-selected="false" data-ecran="simulateur">Le simulateur</button>
+      <button role="tab" aria-selected="false" data-ecran="fiche">Fiche province</button>
+      <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
+      <button role="tab" aria-selected="false" data-ecran="reglages">Les réglages</button>
+      <button role="tab" aria-selected="false" data-ecran="methode">Méthode et sources</button>
+    </nav>
+
+  </div>
 
   <main>
     <p id="chargement" class="chargement" role="status">Chargement des données et des bibliothèques… (quelques secondes si la connexion est lente)</p>
     <!-- 1. La situation actuelle -->
     <section id="ecran-situation" class="ecran actif" role="tabpanel">
-      <div class="but-ecran"><span class="numero">1</span><div><p><b>Le constat, où agir, et quoi faire à la prochaine rentrée.</b></p><p class="quoi">D'abord les chiffres clés, puis la carte de la priorité de chaque province, puis « Ce qu'il faut faire » : le plan de la rentrée. Cliquez sur une province (sur la carte ou dans une alerte) pour ouvrir sa fiche.</p></div></div>
+      <div class="but-ecran"><span class="numero">1</span><div><p><b>Le constat, où agir, et quoi faire à la prochaine rentrée.</b></p><p class="quoi">D'abord les chiffres clés, puis la carte de la priorité de chaque province, puis « Ce qu'il faut faire » : le plan de la rentrée. Un clic sur une province (sur la carte ou sur un nom souligné ↗) ouvre sa fiche ; le bouton « ← Revenir » vous ramène ici.</p></div></div>
       <div class="tuiles" id="tuiles"></div>
       <div class="grille-accueil">
         <figure class="carte-bloc">
@@ -72,7 +78,7 @@
 
     <!-- 2. La frise -->
     <section id="ecran-frise" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">3</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018, et le détail des enseignants, classes et salles.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule. Plus bas : l'évolution des enseignants et le bilan classes, enseignants et salles.</p></div></div>
+      <div class="but-ecran"><span class="numero">4</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018, et le détail des enseignants, classes et salles.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule. Plus bas : l'évolution des enseignants et le bilan classes, enseignants et salles.</p></div></div>
       <div class="filtres">
         <label>Afficher <select id="frise-variable"></select></label>
         <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail.</span>
@@ -89,7 +95,7 @@
         <div class="filtres"><label>Année <select id="bilan-annee"></select></label></div>
         <div id="bilan-classes"></div>
       </div>
-      <div class="etape-suivante"><a href="#fiche">Étape suivante : Imprimer la fiche d'une province →</a></div>
+      <div class="etape-suivante"><a href="#reglages">Étape suivante : Ajuster les règles de priorité →</a></div>
     </section>
 
     <!-- 3. Le simulateur -->
@@ -178,12 +184,12 @@
           </div>
         </div>
       </div>
-      <div class="etape-suivante"><a href="#frise">Étape suivante : Voir l'évolution et le détail des moyens →</a></div>
+      <div class="etape-suivante"><a href="#fiche">Étape suivante : Voir la fiche d'une province →</a></div>
     </section>
 
     <!-- 4. Les réglages -->
     <section id="ecran-reglages" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">4</span><div><p><b>Les règles qui décident de la priorité de chaque province.</b></p><p class="quoi">Pour les experts : retirer une variable une année, changer un seuil, corriger une province avec une justification.</p></div></div>
+      <div class="but-ecran"><span class="numero">5</span><div><p><b>Les règles qui décident de la priorité de chaque province.</b></p><p class="quoi">Pour les experts : retirer une variable une année, changer un seuil, corriger une province avec une justification.</p></div></div>
       <div class="bloc">
         <h3>1. Les variables et leurs seuils</h3>
         <div class="tableau-defile"><table id="t-variables" class="tableau"></table></div>
@@ -233,18 +239,19 @@
         </div>
         <p class="note">Le fichier de scénario est le même que celui des calculs en Python (analyse/parametres) : ce que vous réglez ici est exactement ce que le modèle calcule.</p>
       </div>
-      <div class="etape-suivante"><a href="#simulateur">Étape suivante : Revenir au plan →</a></div>
+      <div class="etape-suivante"><a href="#methode">Étape suivante : Voir la méthode et les sources →</a></div>
     </section>
 
     <!-- 5. Fiche province -->
     <section id="ecran-fiche" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">5</span><div><p><b>Une page par province, à imprimer pour la direction provinciale.</b></p><p class="quoi">Choisissez la province ; la fiche reprend ses chiffres et ce que le plan lui recommande, année par année.</p></div></div>
+      <div id="retour-fiche" class="retour-fiche non-imprime" hidden></div>
+      <div class="but-ecran"><span class="numero">3</span><div><p><b>Une page par province, à imprimer pour la direction provinciale.</b></p><p class="quoi">Choisissez la province ; la fiche reprend ses chiffres et ce que le plan lui recommande, année par année.</p></div></div>
       <div class="filtres non-imprime">
         <label>Province <select id="fiche-province"></select></label>
         <button type="button" id="imprimer" class="bouton">Imprimer la fiche</button>
       </div>
       <article id="fiche" class="fiche"></article>
-      <div class="etape-suivante"><a href="#methode">Étape suivante : Voir la méthode et les sources →</a></div>
+      <div class="etape-suivante"><a href="#frise">Étape suivante : Voir l'évolution et le détail des moyens →</a></div>
     </section>
 
     <!-- 6. Méthode et sources -->
@@ -259,6 +266,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=42"></script>
+  <script type="module" src="app.js?v=48"></script>
 </body>
 </html>
