@@ -412,3 +412,9 @@ a.lien-prov::after { content: " ↗"; font-size: .8em; text-decoration: none; di
 .ligne-titre { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
 .ligne-titre .reglages-barre { margin: 0; width: auto !important; padding: 0 !important; order: 0 !important; }
 .barre-onglets { flex-wrap: nowrap !important; }
+/* réglages d'affichage : « Thème » puis « Mode » en dessous, alignés */
+.ligne-titre .reglages-barre { display: grid !important; grid-template-columns: auto; justify-items: start; gap: .3rem; }
+.ligne-reglage { display: grid; grid-template-columns: 3.6rem auto auto; align-items: center; gap: .45rem; }
+.nom-reglage { font-size: .8rem; font-weight: 700; color: var(--texte-2); text-align: right; }
+.nom-reglage::after { content: " :"; }
+.ligne-reglage .affichage button { min-width: 5.2rem; }

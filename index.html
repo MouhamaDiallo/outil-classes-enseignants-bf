@@ -9,26 +9,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=48">
+  <link rel="stylesheet" href="style.css?v=49">
 </head>
 <body>
   <header class="entete">
     <div class="ligne-titre">
       <h1>Classes et enseignants du primaire public</h1>
-    <div class="reglages-barre" aria-label="Affichage">
-        <span class="affichage" role="group" aria-label="Fond">
-          <button type="button" data-fond="blanc" aria-pressed="false">Blanc</button>
-          <button type="button" data-fond="noir" aria-pressed="false">Noir</button>
-        </span>
-        <span class="affichage" role="group" aria-label="Couleurs">
-          <button type="button" data-couleurs="standard" aria-pressed="false">Mode standard</button>
-          <button type="button" data-couleurs="daltonien" aria-pressed="false" title="Couleurs adaptées aux personnes daltoniennes">Mode daltonien</button>
-        </span>
-        <select id="type-daltonisme" aria-label="Type de daltonisme" title="Type de daltonisme">
-          <option value="deuteranopie" title="Rouge-vert, la forme la plus fréquente">Deutéranopie</option>
-          <option value="protanopie" title="Rouge-vert : le rouge paraît sombre">Protanopie</option>
-          <option value="tritanopie" title="Bleu-jaune, rare">Tritanopie</option>
-        </select>
+      <div class="reglages-barre" aria-label="Affichage">
+        <div class="ligne-reglage"><span class="nom-reglage">Thème</span>
+          <span class="affichage" role="group" aria-label="Thème">
+            <button type="button" data-fond="blanc" aria-pressed="false">Blanc</button>
+            <button type="button" data-fond="noir" aria-pressed="false">Noir</button>
+          </span>
+        </div>
+        <div class="ligne-reglage"><span class="nom-reglage">Mode</span>
+          <span class="affichage" role="group" aria-label="Mode">
+            <button type="button" data-couleurs="standard" aria-pressed="false">Standard</button>
+            <button type="button" data-couleurs="daltonien" aria-pressed="false" title="Couleurs adaptées aux personnes daltoniennes">Daltonien</button>
+          </span>
+          <select id="type-daltonisme" aria-label="Type de daltonisme" title="Type de daltonisme">
+            <option value="deuteranopie" title="Rouge-vert, la forme la plus fréquente">Deutéranopie</option>
+            <option value="protanopie" title="Rouge-vert : le rouge paraît sombre">Protanopie</option>
+            <option value="tritanopie" title="Bleu-jaune, rare">Tritanopie</option>
+          </select>
+        </div>
       </div>
     </div>
     <p class="sous-titre">Où ouvrir des classes, avec quels enseignants et quelles salles, de 2025 à 2031 · Burkina Faso, 45 provinces (découpage des annuaires DGESS) · données 2017-2018 à 2024-2025</p>
