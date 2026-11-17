@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400;700&family=Andika:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=36">
+  <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body>
   <header class="entete">
@@ -33,8 +33,8 @@
 
   <nav class="onglets" role="tablist" aria-label="Écrans">
     <button role="tab" aria-selected="true" data-ecran="situation">La situation actuelle</button>
-    <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
     <button role="tab" aria-selected="false" data-ecran="simulateur">Le simulateur</button>
+    <button role="tab" aria-selected="false" data-ecran="frise">La frise</button>
     <button role="tab" aria-selected="false" data-ecran="reglages">Les réglages</button>
     <button role="tab" aria-selected="false" data-ecran="fiche">Fiche province</button>
     <button role="tab" aria-selected="false" data-ecran="methode">Méthode et sources</button>
@@ -66,30 +66,35 @@
         <h3>Les alertes de 2024-2025 : le problème, et la solution</h3>
         <div id="alertes" class="liste-alertes"></div>
       </section>
-      <figure class="graphe-bloc">
-          <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
-          <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
-          <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le bloc « Classes, enseignants et salles »).</p>
-        </figure>
-      <div id="bilan-classes" class="bloc"></div>
+
       <div class="etape-suivante"><a href="#simulateur">Étape suivante : Ajuster le plan dans le simulateur →</a></div>
     </section>
 
     <!-- 2. La frise -->
     <section id="ecran-frise" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">2</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule.</p></div></div>
+      <div class="but-ecran"><span class="numero">3</span><div><p><b>L'évolution de chaque province, année par année, depuis 2017-2018, et le détail des enseignants, classes et salles.</b></p><p class="quoi">Choisissez ce qu'il faut afficher ; survolez une case pour le détail. Une ligne qui passe au rouge montre une province qui bascule. Plus bas : l'évolution des enseignants et le bilan classes, enseignants et salles.</p></div></div>
       <div class="filtres">
         <label>Afficher <select id="frise-variable"></select></label>
         <span class="note">Chaque case : une province, une année. Survolez ou touchez une case pour le détail.</span>
       </div>
       <div class="legende" id="legende-frise"></div>
       <div class="frise-defile"><table id="frise" class="frise"></table></div>
-      <div class="etape-suivante"><a href="#simulateur">Étape suivante : Voir le plan qui répond à ces besoins →</a></div>
+      <h2 class="titre-section">Les enseignants, les classes et les salles en détail</h2>
+      <figure class="graphe-bloc">
+          <figcaption><span class="titre-fig">Enseignants du public : plus nombreux, mais moins devant une classe</span></figcaption>
+          <div class="graphe"><canvas id="g-enseignants" aria-label="Évolution du nombre d'enseignants du public et de ceux qui tiennent une classe, 2017-18 à 2024-25"></canvas></div>
+          <p class="note">Source : annuaires DGESS du primaire, tableau « enseignants par fonction ». Les autres sont des directeurs, ou des titulaires et suppléants sans classe à eux (voir le tableau ci-dessous).</p>
+        </figure>
+      <div class="bloc">
+        <div class="filtres"><label>Année <select id="bilan-annee"></select></label></div>
+        <div id="bilan-classes"></div>
+      </div>
+      <div class="etape-suivante"><a href="#fiche">Étape suivante : Imprimer la fiche d'une province →</a></div>
     </section>
 
     <!-- 3. Le simulateur -->
     <section id="ecran-simulateur" class="ecran" role="tabpanel" hidden>
-      <div class="but-ecran"><span class="numero">3</span><div><p><b>Le plan de 2025-2026 à 2030-2031, recalculé selon vos choix.</b></p><p class="quoi">Changez le budget, les plafonds ou les règles à gauche : le plan et les recommandations se mettent à jour en moins d'une seconde.</p></div></div>
+      <div class="but-ecran"><span class="numero">2</span><div><p><b>Le plan de 2025-2026 à 2030-2031, recalculé selon vos choix.</b></p><p class="quoi">Changez le budget, les plafonds ou les règles à gauche : le plan et les recommandations se mettent à jour en moins d'une seconde.</p></div></div>
       <div class="simu">
         <form id="commandes" class="commandes" onsubmit="return false">
           <h2>Les réglages du plan</h2>
@@ -173,7 +178,7 @@
           </div>
         </div>
       </div>
-      <div class="etape-suivante"><a href="#fiche">Étape suivante : Imprimer la fiche d'une province →</a></div>
+      <div class="etape-suivante"><a href="#frise">Étape suivante : Voir l'évolution et le détail des moyens →</a></div>
     </section>
 
     <!-- 4. Les réglages -->
@@ -254,6 +259,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script type="module" src="app.js?v=39"></script>
+  <script type="module" src="app.js?v=42"></script>
 </body>
 </html>

@@ -103,6 +103,7 @@ function montrer(ecran) {
   document.querySelectorAll(".ecran").forEach((e) => { e.hidden = e.id !== `ecran-${ecran}`; });
   if (!location.hash.startsWith(`#${ecran}`)) history.replaceState(null, "", `#${ecran}`);
   if (ecran === "situation") etat.carte?.invalidateSize();
+  if (ecran === "frise" && etat.donnees) dessinerGrapheEnseignants();   // un graphique dessiné caché a une taille nulle
 }
 function lireAdresse() {
   const h = decodeURIComponent(location.hash.slice(1)), tiret = h.indexOf("-");
@@ -249,7 +250,13 @@ function dessinerAFaire() {
 
 // Classes, enseignants et salles de l'année choisie sur la carte : les trois comptes ne se confondent pas.
 function dessinerBilanClasses() {
-  const a = anneeCarte(), n = etat.donnees.national[a];
+  const choix = $("#bilan-annee"), annees = etat.donnees.annees_historique;
+  if (!choix.options.length) {
+    choix.innerHTML = annees.map((x) => `<option>${x}</option>`).join("");
+    choix.value = annees.at(-1);
+    choix.addEventListener("change", dessinerBilanClasses);
+  }
+  const a = choix.value, n = etat.donnees.national[a];
   let sansMaitre = 0, pSansMaitre = 0, sallesVides = 0, pSallesVides = 0, sansSalle = 0, pSansSalle = 0;
   for (const q of etat.donnees.provinces) {
     const h = q.historique[a];
@@ -295,7 +302,7 @@ function installerCarte() {
   const curseur = $("#annee-carte");
   curseur.max = etat.donnees.annees_historique.length - 1;
   curseur.value = curseur.max;
-  curseur.addEventListener("input", () => { dessinerCarte(); dessinerListePriorites(); dessinerBilanClasses(); });
+  curseur.addEventListener("input", () => { dessinerCarte(); dessinerListePriorites(); });
 }
 
 function anneeCarte() { return etat.donnees.annees_historique[+$("#annee-carte").value]; }
