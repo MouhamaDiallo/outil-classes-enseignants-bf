@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=59";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=60";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
@@ -678,11 +678,22 @@ function installerReglages() {
   const d = etat.donnees;
   const annees = d.annees_historique.map((a) => `<option>${a}</option>`).join("");
   $("#pa-annee").innerHTML = annees;
+  $("#pa-annee").value = d.annees_historique.at(-1);   // la dernière année est celle qui guide le plan
   $("#c-annee").innerHTML = annees;
   $("#c-annee").value = d.annees_historique.at(-1);
   $("#c-province").innerHTML = d.provinces.map((p) => `<option value="${p.nom}">${titre(p.nom)}</option>`).join("");
   const indicateurs = [...Object.keys(d.provinces[0].historique[d.annees_historique.at(-1)]), "croissance_6_11_relative", "zone_officielle"];
-  $("#v-indicateur").innerHTML = indicateurs.map((x) => `<option>${x}</option>`).join("");
+  // l'indicateur garde son nom technique (celui du fichier de paramètres), précédé d'un libellé lisible
+  const NOMS_INDICATEURS = { eleves: "Élèves", maitres: "Maîtres (enseignants devant une classe)", ecoles: "Écoles", salles: "Salles de classe",
+    groupes_pedagogiques: "Classes (groupes pédagogiques)", eleves_par_maitre: "Élèves par maître", eleves_par_salle: "Élèves par salle",
+    var_eleves_pct: "Variation des élèves sur un an (%)", var_maitres_pct: "Variation des maîtres sur un an (%)",
+    ecart_var_eleves_maitres: "Écart entre ces deux variations (points)", ecoles_pct_2018: "Écoles en % de 2018-19",
+    pdi: "Déplacés internes accueillis", pdi_pct_pop: "Déplacés en % de la population de 2019", suppleants: "Suppléants",
+    enseignants_total: "Enseignants du public", titulaires: "Titulaires", directeurs: "Directeurs",
+    sans_classe: "Enseignants sans classe (hors directeurs)", paillote_min: "Salles en paillote (bas de la fourchette)",
+    paillote_max: "Salles en paillote (haut de la fourchette)", croissance_6_11_relative: "Croissance des 6-11 ans au-dessus de la moyenne (points)",
+    zone_officielle: "Zone officielle à fort défi sécuritaire (1 = oui)" };
+  $("#v-indicateur").innerHTML = indicateurs.map((x) => `<option value="${x}">${NOMS_INDICATEURS[x] ?? x} · ${x}</option>`).join("");
 
   $("#pa-ajouter").addEventListener("click", () => {
     const a = $("#pa-annee").value, v = $("#pa-variable").value;
@@ -731,10 +742,10 @@ function dessinerReglages() {
   for (const [c, v] of Object.entries(p.variables)) {
     const cond = v.conditions.map((x) => `${x.indicateur} ${x.op} ${x.seuil}`).join(" et ");
     const s0 = v.conditions[0].seuil;
-    const role = v.role === "comparaison" ? `<span class="comparaison-seule">comparaison seulement (n'entre pas dans les priorités)</span>` : v.role;
+    const role = v.role === "comparaison" ? `<span class="comparaison-seule">comparaison seulement</span>` : v.role;
     lignes.push([c, esc(v.nom), role, `<input type="checkbox" data-actif="${c}" ${v.actif ? "checked" : ""} aria-label="Activer ${c}">`,
       `${esc(v.explication ?? cond)}<br><span class="note">${esc(cond)}</span>`,
-      s0 === "plafond" ? "plafond de l'année" : `<input type="number" step="any" data-seuil="${c}" value="${s0}" style="width:6rem">`]);
+      s0 === "plafond" ? "plafond de l'année" : v.role === "comparaison" ? "liste officielle" : `<input type="number" step="any" data-seuil="${c}" value="${s0}" style="width:6rem">`]);
   }
   $("#t-variables").innerHTML = tableauHtml(lignes);
   document.querySelectorAll("[data-actif]").forEach((x) => x.addEventListener("change", () => { p.variables[x.dataset.actif].actif = x.checked; appliquerReglages(); }));
