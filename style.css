@@ -331,3 +331,37 @@ details.autres summary { cursor: pointer; font-size: .82rem; color: var(--accent
 details.autres .puces { margin-top: .35rem; }
 .alerte .solution { background: color-mix(in srgb, var(--donneuse) 13%, var(--surface)); border-top: 1px dashed var(--axe); padding: .6rem .9rem .7rem; }
 .alerte .solution p { margin: .15rem 0 0; font-size: .92rem; color: var(--texte); }
+/* alertes : un seul cadre ; chaque ligne = le problème (rouge) à gauche, la solution (vert) à droite */
+.liste-alertes { display: grid; gap: .55rem; }
+.ligne-alerte { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: .5rem; }
+.ligne-alerte > div { padding: .55rem .75rem; border-radius: 3px; font-size: .92rem; line-height: 1.45; }
+.ligne-alerte .probleme { background: color-mix(in srgb, var(--urgence) 9%, var(--surface)); border-left: 4px solid var(--urgence); }
+.ligne-alerte.niveau-moyen .probleme { background: color-mix(in srgb, var(--surcharge) 11%, var(--surface)); border-left-color: var(--surcharge); }
+.ligne-alerte.niveau-ressource .probleme { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); border-left-color: var(--accent); }
+.ligne-alerte .solution { background: color-mix(in srgb, var(--donneuse) 13%, var(--surface)); border-left: 4px solid var(--donneuse); }
+.ligne-alerte .etiq-zone { display: inline-block; margin-right: .45rem; padding: 0 .35rem; border-radius: 2px; font-size: .68rem; vertical-align: 1px; background: var(--surface); }
+.ligne-alerte .probleme .etiq-zone { color: var(--urgence); }
+.ligne-alerte.niveau-moyen .probleme .etiq-zone { color: var(--surcharge); }
+.ligne-alerte.niveau-ressource .probleme .etiq-zone { color: var(--accent); }
+.ligne-alerte .solution .etiq-zone { color: var(--donneuse); }
+.ligne-alerte .chiffre { color: var(--accent); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .ligne-alerte { grid-template-columns: minmax(0, 1fr); gap: 0; } .ligne-alerte .probleme { border-radius: 3px 3px 0 0; } .ligne-alerte .solution { border-radius: 0 0 3px 3px; } }
+/* alertes, version aérée : plus d'espace, couleurs plus marquées */
+.liste-alertes { gap: 1rem; }
+.ligne-alerte { gap: .8rem; }
+.ligne-alerte > div { padding: .85rem 1.05rem; line-height: 1.55; }
+.ligne-alerte .probleme { background: color-mix(in srgb, var(--urgence) 15%, var(--surface)); border-left-width: 6px; }
+.ligne-alerte.niveau-moyen .probleme { background: color-mix(in srgb, var(--surcharge) 17%, var(--surface)); }
+.ligne-alerte.niveau-ressource .probleme { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.ligne-alerte .solution { background: color-mix(in srgb, var(--donneuse) 20%, var(--surface)); border-left-width: 6px; display: flex; flex-direction: column; justify-content: center; }
+.ligne-alerte .etiq-zone { display: inline-block; margin: 0 0 .45rem; padding: .1rem .5rem; border-radius: 3px; font-size: .7rem; color: #fff !important; }
+.ligne-alerte .probleme .etiq-zone { background: var(--urgence); color: var(--lettre-urgence) !important; }
+.ligne-alerte.niveau-moyen .probleme .etiq-zone { background: var(--surcharge); color: var(--lettre-surcharge) !important; }
+.ligne-alerte.niveau-ressource .probleme .etiq-zone { background: var(--accent); color: var(--sur-accent) !important; }
+.ligne-alerte .solution .etiq-zone { background: var(--donneuse); color: var(--lettre-donneuse) !important; align-self: flex-start; }
+.titre-alerte { font-family: var(--titres); font-weight: 700; font-size: 1.02rem; color: var(--texte); }
+.chiffre-alerte { margin: .2rem 0 .3rem; color: var(--texte-2); }
+.chiffre-alerte b { font-family: var(--titres); font-size: 1.45rem; color: var(--accent); font-variant-numeric: tabular-nums; margin-right: .25rem; }
+.prov-alerte { font-size: .88rem; color: var(--texte-2); }
+.texte-solution { font-size: .97rem; color: var(--texte); }
+@media (max-width: 760px) { .ligne-alerte { gap: 0; } }

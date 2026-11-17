@@ -174,12 +174,10 @@ function dessinerAlertes() {
   const D = P.filter((x) => x.manque > 0).sort((x, y) => y.manque - x.manque);
   const E = P.filter((x) => x.sansSalle > 0).sort((x, y) => y.sansSalle - x.sansSalle);
   const tot = (xs, k) => xs.reduce((t, x) => t + x[k], 0);
-  // une étiquette par province (les 3 premières), le reste se déplie
+  // les provinces touchées : les 6 premières, cliquables, puis « et N autres »
   const etiquettes = (xs, k) => {
-    const e = (x) => `<a class="puce-prov" href="#fiche-${encodeURIComponent(x.nom)}">${titre(x.nom)} <b>${fmt(x[k])}</b></a>`;
-    const reste = xs.slice(3);
-    return `<div class="puces">${xs.slice(0, 3).map(e).join("")}</div>`
-      + (reste.length ? `<details class="autres"><summary>+ ${reste.length} autre${reste.length > 1 ? "s" : ""}</summary><div class="puces">${reste.map(e).join("")}</div></details>` : "");
+    const e = (x) => `${lienProv(x.nom)} (${fmt(x[k])})`;
+    return xs.length > 6 ? `${xs.slice(0, 6).map(e).join(", ")} et ${xs.length - 6} autres` : xs.map(e).join(", ");
   };
   const cartes = [];
   if (A.length) cartes.push({ niveau: "fort", titre: "Classes surchargées, enseignants disponibles sur place",
@@ -197,15 +195,13 @@ function dessinerAlertes() {
   if (C.length) cartes.push({ niveau: "ressource", titre: "Enseignants sans classe, sans surcharge sur place",
     chiffre: fmt(tot(C, "dispo")), unite: `enseignants mobilisables, ${C.length} provinces`, puces: etiquettes(C, "dispo"),
     solution: "Une réserve à redéployer dans la région. Vérifier s'ils viennent d'écoles fermées." });
-  $("#alertes").innerHTML = cartes.map((c) => `<article class="alerte niveau-${c.niveau}">
-      <div class="probleme">
-        <div class="etiq-zone">${c.niveau === "ressource" ? "Ressource" : "Le problème"}</div>
-        <h4>${c.titre}</h4>
-        <div class="gros-chiffre"><b>${c.chiffre}</b> <span>${c.unite}</span></div>
-        ${c.puces}
-      </div>
-      <div class="solution"><div class="etiq-zone">La solution</div><p>${c.solution}</p></div>
-    </article>`).join("") || "<p>Aucune alerte.</p>";
+  $("#alertes").innerHTML = cartes.map((c) => `<div class="ligne-alerte niveau-${c.niveau}">
+      <div class="probleme"><span class="etiq-zone">${c.niveau === "ressource" ? "Ressource" : "Problème"}</span>
+        <div class="titre-alerte">${c.titre}</div>
+        <div class="chiffre-alerte"><b>${c.chiffre}</b> ${c.unite}</div>
+        <div class="prov-alerte">${c.puces}.</div></div>
+      <div class="solution"><span class="etiq-zone">Solution</span><div class="texte-solution">${c.solution}</div></div>
+    </div>`).join("") || "<p>Aucune alerte.</p>";
 }
 
 // Le plan d'une année, en quatre lignes : classes, enseignants, salles, résultat.
