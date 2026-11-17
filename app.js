@@ -1,6 +1,6 @@
 // Interface de l'application : 6 écrans autour du moteur (moteur.js).
 // Les calculs (binaires et plan) viennent du moteur ; ce fichier ne fait qu'afficher et régler.
-import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=60";
+import { calculerBinaires, calculerPlan, synthese, CLASSES } from "./moteur.js?v=61";
 
 const CLE_STOCKAGE = "outil-classes-scenario";
 const LIBELLES = { urgence: "Urgence", surcharge: "Surcharge", vigilance: "Vigilance", stable: "Stable", donneuse: "Donneuse" };
@@ -828,9 +828,9 @@ function dessinerFiche() {
 // Le test rétrospectif (15_test_retrospectif.py) : prévu contre réel, pour le pays.
 function tableauTest() {
   const t = etat.donnees.test_retrospectif ?? [];
-  const role = { calage: "calage de k", verification: "<b>épreuve</b>", controle: "contrôle" };
+  const role = { calage: "calage de k et c", verification: "<b>épreuve</b>", controle: "contrôle" };
   const lignes = t.map((r) => `<tr${r.role === "verification" ? ' class="ligne-forte"' : ""}><td>${r.base} → ${r.prevue}</td><td>${r.methode}</td><td>${role[r.role]}</td>
-    <td class="nombre">${fmt(r.prevu)}</td><td class="nombre">${fmt(r.reel)}</td><td class="nombre">${r.ecart_national_pct > 0 ? "+" : ""}${fmt(r.ecart_national_pct, 1)} %</td>
+    <td class="nombre">${fmt(r.prevu)}</td><td class="nombre">${fmt(r.reel)}</td><td class="nombre">${r.ecart_national_pct > 0 ? "+" : r.ecart_national_pct < 0 ? "−" : ""}${fmt(Math.abs(r.ecart_national_pct), 1)} %</td>
     <td class="nombre">${r.provinces_a_5_pct_pres} sur ${r.provinces}</td></tr>`).join("");
   return `<div class="tableau-defile"><table class="tableau"><thead><tr><th>Années</th><th>Méthode</th><th>Rôle</th><th>Élèves prévus</th><th>Élèves comptés</th><th>Écart pays</th><th>Provinces à 5 % près</th></tr></thead><tbody>${lignes}</tbody></table></div>`;
 }
@@ -839,11 +839,11 @@ function ecrireMethode() {
     <h2>À quoi sert cet outil</h2>
     <p>Aider le ministère, à chaque rentrée, à décider où ouvrir des classes du primaire public, avec quels enseignants et quelles salles, pour qu'aucun enfant ne soit dans une classe au-delà d'un plafond donné.</p>
     <h2>Le constat de départ</h2>
-    <p>Entre 2017-18 et 2024-25, le nombre d'enseignants du primaire public a augmenté de 10 %, mais le nombre d'enseignants devant une classe a baissé de 13 %. En 2024-25, 15 463 titulaires ou suppléants n'ont pas de classe à eux (ils étaient 2 221 en 2017-18), alors que 920 classes n'ont pas d'enseignant attitré et que des classes débordent. Selon l'annuaire DGESS, un suppléant « peut être redéployé à tout moment dans une autre école de la CEB, de la province, de la région ». Ce qui manque surtout, ce sont des salles.</p>
+    <p>Entre 2017-18 et 2024-25, le nombre d'enseignants du primaire public a augmenté de 10 %, mais le nombre d'enseignants devant une classe a baissé de 13 %. En 2024-25, 15 463 titulaires ou suppléants n'ont pas de classe à eux (ils étaient 2 221 en 2017-18), alors que 920 classes n'ont pas d'enseignant attitré et que des classes débordent. Selon l'annuaire DGESS, un suppléant « peut être redéployé à tout moment dans une autre école de la CEB, de la province, de la région ». Ce qui manque d'abord, ce sont des salles ; puis, quand les élèves partis reviennent, des enseignants.</p>
     <h2>Les variables « oui / non »</h2>
     <p>Chaque province reçoit chaque année des « oui / non » recalculés à partir des données : surcharge, fuite des maîtres, accueil de déplacés, fermetures d'écoles, manque de salles, croissance durable, donneuse possible. Ils donnent la classe de priorité. La liste officielle des zones à fort défi sécuritaire sert seulement à comparer. Tout est réglable dans l'écran « Les réglages ».</p>
     <h2>Le plan</h2>
-    <p>Un programme linéaire décide, pour chaque province et chaque année de 2025-26 à 2030-31, combien de classes ouvrir, avec quel enseignant (d'abord un enseignant sans classe de la province, puis un enseignant sans classe d'une autre province de la même région, puis une recrue, comptée en années de salaire), et dans quelle salle : salle libre, abri temporaire (ETA, 3 ans), salle en dur ou double flux (deux groupes et deux enseignants par salle, en dernier recours, compté à moitié). Il réduit au maximum le nombre d'élèves au-delà du plafond, dans la limite de l'argent pour les salles et des postes de recrues. Les règles viennent des variables : ETA là où le besoin est lié aux déplacés ou aux fermetures, salle en dur là où la population va durablement croître.</p>
+    <p>Pour chaque province et chaque année de 2025-26 à 2030-31, un programme linéaire décide combien de classes ouvrir, avec quels enseignants (d'abord ceux qui sont déjà payés et sans classe, de la province puis de la région ; ensuite des recrues) et dans quelles salles (salle libre, abri temporaire, salle en dur, double flux en dernier recours), pour qu'il y ait le moins possible d'élèves au-dessus du plafond avec l'argent disponible. Le détail, formule par formule, suit.</p>
     <h2>Les formules, pour refaire le calcul à la main</h2>
     <p class="note">Notations : E = élèves du public d'une province ; P = enfants de 6 à 11 ans projetés par l'INSD (l'année scolaire 2025-2026 est rattachée à la population de 2025) ; G = classes (groupes pédagogiques) ; plafond = élèves par classe au plus. Chaque formule est écrite dans un script Python (entre parenthèses) et dans le moteur de l'application, qui donnent le même résultat.</p>
     <ol class="formules">
@@ -869,7 +869,6 @@ function ecrireMethode() {
     <p class="note">Toutes les valeurs sont dans le fichier des paramètres (écran « Les réglages », bouton d'export) ; les scripts Python et les tableaux intermédiaires sont dans le dossier déposé.</p>
     <h2>Les limites</h2>
     <ul>
-      <li>Ce sont des moyennes par province : des écoles peuvent rester surchargées dans une province « correcte ». Le même calcul peut se faire école par école avec les données internes du ministère.</li>
       <li>Les projections de l'INSD datent d'avant les grands déplacements. Les déplacés sont connus jusqu'en mars 2023.</li>
       <li>Le coût d'un ETA est une estimation fragile (environ 3 M FCFA) ; il est réglable.</li>
       <li>Les départs d'enseignants (retraites, démissions, abandons de poste) ne sont pas calculés : les recrues de l'outil servent seulement à ouvrir des classes, il faut toujours remplacer ceux qui partent.</li>
@@ -881,13 +880,17 @@ function ecrireMethode() {
       <li><b>Pas de post-primaire</b> : le fichier fourni par le concours porte sur le préscolaire et le primaire ; nous avons donné la priorité au primaire.</li>
       <li>Envoyer des enseignants dans une province à fort défi sécuritaire suppose qu'ils acceptent d'y aller : le plan ne remplace pas les incitations (prime, logement, recrutement local).</li>
       <li>Les classes sous paillote sont données en fourchette : murs et toits sont publiés dans deux tableaux séparés.</li>
+      <li><b>Le privé n'est pas dans le plan</b> : en 2024-25, il compte 4 750 écoles sur 14 276 (33 %) et environ 917 000 élèves sur 3,31 millions (28 %). L'outil porte sur le public, où l'État affecte les enseignants et construit les salles. Si des familles passent du privé au public (ou l'inverse), la demande change : à corriger dans les paramètres.</li>
+      <li><b>Pas de latrines ni de points d'eau</b> : les annuaires les publient par région, pas par province ; une salle construite devrait aller avec ses latrines (à ajouter au coût si le ministère le souhaite).</li>
+      <li><b>2025-26 et 2026-27 partent de l'offre de 2024-25</b> : les annuaires s'arrêtent en 2024-25, donc les classes, salles et enseignants ouverts depuis ne sont pas comptés. Dès la parution de l'annuaire 2025-26, on recale la prévision et on relance le plan.</li>
+      <li><b>La reprise des élèves est supposée partout</b> (scénario par défaut), même dans les provinces où elle n'a pas commencé, comme la Tapoa : sa fiche le signale (« prévision fragile ») et le scénario « Plus aucune réouverture » donne le chiffre bas.</li>
     </ul>
     <h2>Vérifications</h2>
     <p>Les totaux des provinces retombent sur les totaux nationaux publiés par la DGESS (par exemple 13 558 écoles en 2023-24). Le moteur de l'application redonne exactement les résultats des calculs faits en Python (0 écart sur les priorités ; moins de 0,03 % sur la courbe de rendement).</p>
     <h2>Les enseignants sont-ils affectés selon les élèves ?</h2>
     <p>C'est l'indicateur de cohérence du diagnostic national (RESEN) : la part de l'affectation des enseignants qui ne s'explique pas par le nombre d'élèves. Le RESEN le calcule école par école (29 % en 2013-14) ; faute de données publiques par école, nous le calculons province par province, où les écarts entre écoles se compensent : 9 % en 2017-18, 5 % en 2024-25. Le plan le ramène à environ 2 %, et surtout resserre les extrêmes : en 2025-26, le pire ratio passe de 133 (sans action) à 64 élèves par maître, et l'écart-type entre provinces de 18,5 à 7,3.</p>
     <h2>Les prévisions ont-elles été testées ?</h2>
-    <p>Oui. On se place dans le passé, on prévoit une année avec la formule de l'outil, puis on compare avec ce que l'annuaire a compté. Le coefficient k a été calé sur 2022-23 → 2023-24 seulement : <b>l'année 2024-25 ne lui a pas servi, c'est la vraie épreuve.</b></p>
+    <p>Oui. On se place dans le passé, on prévoit une année avec la formule de l'outil, puis on compare avec ce que l'annuaire a compté. Les coefficients k et c ont été calés sur 2022-23 → 2023-24 seulement : <b>l'année 2024-25 ne leur a pas servi, c'est la vraie épreuve.</b></p>
     ${tableauTest()}
     <p>Avec le rattrapage, l'outil prévoit les élèves de 2024-25 à <b>0,3 % près</b> pour le pays, contre 5 % avec la population seule, et 27 provinces sur 45 à 5 % près (22 avec la population seule). Grâce à la limite de 20 % par an, la pire province est à 41 % d'écart, au lieu de 118 % sans limite. Les provinces frontalières (Tapoa, Kompienga, Sourou, Yagha) restent les moins bien prévues : elles dépendent d'événements de sécurité qu'aucune formule ne prévoit. Chaque fiche province donne son propre test. Pendant les fermetures massives (2022-23), aucune méthode ne pouvait prévoir la chute. <b>Dès que l'annuaire 2025-26 paraîtra, on compare la prévision de 2025-26 à la réalité, on recale k et c</b> (15_test_retrospectif.py) et on relance le plan.</p>
     <h2>Les sources</h2>
